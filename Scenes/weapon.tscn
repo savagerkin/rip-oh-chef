@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://bem6v0fjickci"]
+
+[ext_resource type="Script" uid="uid://ctfxfbim3jtt5" path="res://weapon.gd" id="1_er6cq"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_a08nb"]
+
+[node name="Weapon" type="Node3D" unique_id=142705459 node_paths=PackedStringArray("timer", "ray", "debug_tracer")]
+script = ExtResource("1_er6cq")
+timer = NodePath("FireTimer")
+ray = NodePath("RayCast3D")
+rayRange = -50.0
+debug_tracer = NodePath("MeshInstance3D2")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1985039586]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_a08nb")
+
+[node name="Marker3D" type="Marker3D" parent="." unique_id=148286201]
+visible = false
+gizmo_extents = 2.62
+
+[node name="RayCast3D" type="RayCast3D" parent="." unique_id=1064731298]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0269411, 0, 0)
+target_position = Vector3(100, 0, 0)
+
+[node name="FireTimer" type="Timer" parent="." unique_id=1609969363]
+wait_time = 0.2
+one_shot = true
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=1846581847]

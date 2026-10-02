@@ -21,9 +21,7 @@ func _process(_delta: float) -> void:
 	Steam.run_callbacks()
 
 
-# -------------------------
 # STEAM
-# -------------------------
 
 func host_lobby() -> void:
 	Steam.createLobby(LOBBY_TYPE, MAX_MEMBERS)
@@ -58,9 +56,7 @@ func on_join_requested(lobby_id: int, _steam_id: int) -> void:
 	Steam.joinLobby(lobby_id)
 
 
-# -------------------------
 # LOCAL TESTING
-# -------------------------
 
 func host_local() -> void:
 	var local_peer := ENetMultiplayerPeer.new()

@@ -38,7 +38,7 @@ func spawn_player(peer_id: Variant) -> Node:
 	return player
 
 
-func initialize_player(player: CharacterBody3D) -> void:
+func initialize_player(player: Player) -> void:
 	player.position = $SpawnPoint.position
 
 	for other in players:
@@ -48,7 +48,7 @@ func initialize_player(player: CharacterBody3D) -> void:
 
 
 func _on_multiplayer_spawner_spawned(node: Node) -> void:
-	if node is CharacterBody3D:
+	if node is Player:
 		initialize_player(node)
 
 
