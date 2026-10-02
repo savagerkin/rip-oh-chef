@@ -16,6 +16,7 @@ jobs:
       image: barichello/godot-ci:4.7.2
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - platform: windows
@@ -36,9 +37,14 @@ jobs:
         run: |
           mkdir -v -p ~/.local/share/godot/export_templates/
           mkdir -v -p ~/.config/
+
           cp -r /root/.config/godot ~/.config/ || true
 
-          TEMPLATE_DIR=$(find /root/.local/share/godot/export_templates -mindepth 1 -maxdepth 1 -type d | head -1)
+          TEMPLATE_DIR=$(find /root/.local/share/godot/export_templates \
+            -mindepth 1 \
+            -maxdepth 1 \
+            -type d \
+            | head -1)
 
           echo "Using templates from: $TEMPLATE_DIR"
 
@@ -49,13 +55,34 @@ jobs:
           mkdir -v -p build/${{ matrix.platform }}
 
           EXPORT_DIR="$(readlink -f build)"
+          OUTPUT="$EXPORT_DIR/${{ matrix.platform }}/${{ matrix.file }}"
 
+          echo "Building ${{ matrix.preset }}"
+          echo "Output: $OUTPUT"
+
+          # Godot 4.7.2 can crash during shutdown in headless CI
+          # even after successfully creating the export.
           godot --headless --verbose \
             --export-release "${{ matrix.preset }}" \
-            "$EXPORT_DIR/${{ matrix.platform }}/${{ matrix.file }}"
+            "$OUTPUT" || true
+
+          echo ""
+          echo "Checking build output..."
+
+          ls -lah "$EXPORT_DIR/${{ matrix.platform }}" || true
+
+          if [ ! -e "$OUTPUT" ]; then
+            echo "ERROR: Export was not created:"
+            echo "$OUTPUT"
+            exit 1
+          fi
+
+          echo "Build successfully created:"
+          echo "$OUTPUT"
 
       - name: Upload Build
         uses: actions/upload-artifact@v4
         with:
           name: RipOhChef-${{ matrix.platform }}
           path: build/${{ matrix.platform }}
+          if-no-files-found: error
