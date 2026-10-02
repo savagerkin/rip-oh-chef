@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://du6tdy7622q7m" path="res://player.gd" id="1_v0iea"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_a08nb"]
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_a08nb"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_a08nb"]
@@ -13,14 +15,22 @@ albedo_color = Color(0.88573015, 0, 0.3445546, 1)
 properties/0/path = NodePath(".:position")
 properties/0/spawn = true
 properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
 
 [node name="Player" type="CharacterBody3D" unique_id=1186766046]
 script = ExtResource("1_v0iea")
 
+[node name="Eyes" type="CSGMesh3D" parent="." unique_id=469426701]
+transform = Transform3D(0.546557, 0, 0, 0, 0.3782496, 0, 0, 0, 0.2851209, 0, 0.53788763, -0.35944456)
+layers = 2
+mesh = SubResource("BoxMesh_a08nb")
+
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1729655473]
 shape = SubResource("CapsuleShape3D_a08nb")
 
-[node name="CSGMesh3D" type="CSGMesh3D" parent="." unique_id=709794412]
+[node name="Body" type="CSGMesh3D" parent="." unique_id=709794412]
 mesh = SubResource("CapsuleMesh_a08nb")
 material = SubResource("StandardMaterial3D_rd8vp")
 
@@ -31,3 +41,4 @@ replication_config = SubResource("SceneReplicationConfig_5ur5x")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72519636, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Node3D" unique_id=2085396468]
+near = 0.459
