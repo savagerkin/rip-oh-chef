@@ -5,7 +5,8 @@ on:
 
 env:
   GODOT_VERSION: 4.7.2
-  GAME_NAME: RipOhChef
+  EXPORT_NAME: RipOhChef
+  PROJECT_PATH: .
 
 jobs:
   build:
@@ -18,27 +19,40 @@ jobs:
       matrix:
         include:
           - platform: windows
-            preset: Windows Desktop
-            file: RipOhChef.exe
+            preset: "Windows Desktop"
+            file: "RipOhChef.exe"
 
           - platform: mac
-            preset: macOS
-            file: RipOhChef.zip
+            preset: "macOS"
+            file: "RipOhChef.zip"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
-      - name: Import Project
-        run: godot --headless --import
+      - name: Setup
+        run: |
+          mkdir -v -p ~/.local/share/godot/export_templates/
+          mkdir -v -p ~/.config/
+          cp -r /root/.config/godot ~/.config/ || true
+
+          TEMPLATE_DIR=$(find /root/.local/share/godot/export_templates -mindepth 1 -maxdepth 1 -type d | head -1)
+
+          echo "Using templates from: $TEMPLATE_DIR"
+
+          cp -r "$TEMPLATE_DIR" ~/.local/share/godot/export_templates/
 
       - name: Build
         run: |
-          mkdir -p build/${{ matrix.platform }}
+          mkdir -v -p build/${{ matrix.platform }}
 
-          godot --headless \
+          EXPORT_DIR="$(readlink -f build)"
+
+          godot --headless --verbose \
             --export-release "${{ matrix.preset }}" \
-            "build/${{ matrix.platform }}/${{ matrix.file }}"
+            "$EXPORT_DIR/${{ matrix.platform }}/${{ matrix.file }}"
 
       - name: Upload Build
         uses: actions/upload-artifact@v4
