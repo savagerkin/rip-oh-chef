@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://ds8jscwhydigj"]
+
+[ext_resource type="Script" uid="uid://cjn7urpxartec" path="res://main.gd" id="1_jjgbg"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_a08nb"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_a08nb"]
+
+[node name="main" type="Node3D" unique_id=408063236]
+script = ExtResource("1_jjgbg")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1174963678]
+
+[node name="Host" type="Button" parent="CanvasLayer" unique_id=1273459220]
+offset_right = 8.0
+offset_bottom = 8.0
+focus_mode = 0
+text = "Host
+"
+
+[node name="Players" type="Node3D" parent="." unique_id=1803390603]
+
+[node name="SpawnPoint" type="Node3D" parent="." unique_id=2082633344]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="." unique_id=703541794]
+_spawnable_scenes = PackedStringArray("uid://b5dxiciiiyot3")
+spawn_path = NodePath("..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1379005815]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=431535537]
+shape = SubResource("WorldBoundaryShape3D_a08nb")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=187392890]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0)
+mesh = SubResource("PlaneMesh_a08nb")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1862717566]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.839725, 0)
+shadow_enabled = true
+distance_fade_shadow = 85.2
+omni_range = 15.989
+omni_attenuation = -0.639
+
+[connection signal="pressed" from="CanvasLayer/Host" to="." method="_on_host_pressed"]
+[connection signal="spawned" from="MultiplayerSpawner" to="." method="_on_multiplayer_spawner_spawned"]
