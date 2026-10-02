@@ -4,26 +4,38 @@ const PLAYER_CONTROLLER = preload("uid://b5dxiciiiyot3")
 
 var players: Array[CharacterBody3D]
 
+@onready var spawner: MultiplayerSpawner = $MultiplayerSpawner
+
+func _process(delta: float) -> void:
+	if Input.is_action_just_pressed("esc"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _ready() -> void:
 	Networking.host_created.connect(on_host_created)
 
+	spawner.spawn_function = spawn_player
+
 
 func on_host_created() -> void:
-	# Spawn the host player
-	spawn_player(multiplayer.get_unique_id())
+	# Server creates its own player.
+	spawner.spawn(multiplayer.get_unique_id())
 
-	# Spawn players that join
-	multiplayer.peer_connected.connect(spawn_player)
+	# Server creates players for connecting clients.
+	multiplayer.peer_connected.connect(on_peer_connected)
 
 
-func spawn_player(peer_id: int) -> void:
-	var new_player := PLAYER_CONTROLLER.instantiate() as CharacterBody3D
+func on_peer_connected(peer_id: int) -> void:
+	if multiplayer.is_server():
+		spawner.spawn(peer_id)
 
-	new_player.name = str(peer_id)
-	add_child(new_player)
 
-	initialize_player(new_player)
+func spawn_player(peer_id: Variant) -> Node:
+	var player := PLAYER_CONTROLLER.instantiate() as CharacterBody3D
+
+	player.name = str(peer_id)
+	player.set_multiplayer_authority(int(peer_id))
+
+	return player
 
 
 func initialize_player(player: CharacterBody3D) -> void:
@@ -35,11 +47,21 @@ func initialize_player(player: CharacterBody3D) -> void:
 	players.append(player)
 
 
-func _on_host_pressed() -> void:
-	$CanvasLayer/Host.hide()
-	Networking.host_lobby()
-
-
 func _on_multiplayer_spawner_spawned(node: Node) -> void:
 	if node is CharacterBody3D:
 		initialize_player(node)
+
+
+func _on_host_pressed() -> void:
+	$CanvasLayer.hide()
+	Networking.host_lobby()
+
+
+func _on_local_host_pressed() -> void:
+	$CanvasLayer.hide()
+	Networking.host_local()
+
+
+func _on_local_join_pressed() -> void:
+	$CanvasLayer.hide()
+	Networking.join_local()

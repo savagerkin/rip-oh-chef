@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b5dxiciiiyot3"]
 
-[ext_resource type="Script" uid="uid://du6tdy7622q7m" path="res://player_controller.gd" id="1_rd8vp"]
+[ext_resource type="Script" uid="uid://du6tdy7622q7m" path="res://player.gd" id="1_v0iea"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_a08nb"]
 
@@ -14,8 +14,8 @@ properties/0/path = NodePath(".:position")
 properties/0/spawn = true
 properties/0/replication_mode = 1
 
-[node name="PlayerController" type="CharacterBody3D" unique_id=1186766046]
-script = ExtResource("1_rd8vp")
+[node name="Player" type="CharacterBody3D" unique_id=1186766046]
+script = ExtResource("1_v0iea")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1729655473]
 shape = SubResource("CapsuleShape3D_a08nb")
