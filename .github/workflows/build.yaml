@@ -1,10 +1,6 @@
 name: Build Game
 
 on:
-  push:
-    branches:
-      - main
-
   workflow_dispatch:
 
 env:
@@ -16,7 +12,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     container:
-      image: barichello/godot-ci:4.5
+      image: barichello/godot-ci:4.7.2
 
     strategy:
       matrix:
@@ -33,20 +29,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Godot
-        run: |
-          mkdir -p ~/.local/share/godot/export_templates/
-          mkdir -p ~/.config/
-
-          mv /root/.config/godot ~/.config/godot
-
-          mv \
-            /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable \
-            ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
-
       - name: Import Project
-        run: |
-          godot --headless --import
+        run: godot --headless --import
 
       - name: Build
         run: |
