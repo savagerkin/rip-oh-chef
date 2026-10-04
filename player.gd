@@ -25,7 +25,6 @@ var max_health: float = 100.0
 func _enter_tree() -> void:
 	set_multiplayer_authority(name.to_int())
 
-
 func _ready() -> void:
 	health_bar.max_value = max_health
 	health_bar.value = health
@@ -39,13 +38,8 @@ func _ready() -> void:
 	if is_owner:
 		camera.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
 	load_username()
-#For loading username
-func load_username() -> void:
-	username.text = Networking.get_steam_username(
-		get_multiplayer_authority()
-	)
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_multiplayer_authority():
@@ -94,6 +88,10 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+func load_username() -> void:
+	username.text = Networking.get_username(
+		get_multiplayer_authority()
+	)
 
 # Called by the weapon when this player gets hit.
 func take_damage(damage: float) -> void:
@@ -112,7 +110,7 @@ func take_damage(damage: float) -> void:
 func die() -> void:
 	if health <= 0:
 		health = max_health
-		self.position = Vector3(0,10,0)
+		self.global_position = Vector3(0,10,0)
 		print("Player ", name, " died")
 		
 		

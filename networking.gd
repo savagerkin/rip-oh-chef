@@ -15,11 +15,9 @@ func _ready() -> void:
 	Steam.lobby_created.connect(on_lobby_created)
 	Steam.lobby_joined.connect(on_lobby_joined)
 	Steam.join_requested.connect(on_join_requested)
-	
 
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
-
 
 # STEAM
 
@@ -55,29 +53,22 @@ func on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: 
 func on_join_requested(lobby_id: int, _steam_id: int) -> void:
 	Steam.joinLobby(lobby_id)
 
-func get_steam_id_from_peer(peer_id: int) -> int:
+func get_username(peer_id: int) -> String:
+	# Local ENet testing
 	if multiplayer.multiplayer_peer is not SteamMultiplayerPeer:
-		return 0
+		return "Player " + str(peer_id)
 
+	# If this is OUR player, Steam already knows our username.
+	if peer_id == multiplayer.get_unique_id():
+		return Steam.getPersonaName()
+
+	# Otherwise find the Steam ID belonging to the remote peer.
 	var steam_peer := multiplayer.multiplayer_peer as SteamMultiplayerPeer
 
-	var steam_id = steam_peer.get_steam64_from_peer_id(peer_id)
-
-	if steam_id <= 0:
-		return 0
-
-	return steam_id
-
-
-func get_steam_username(peer_id: int) -> String:
-	var steam_id := get_steam_id_from_peer(peer_id)
+	var steam_id: int = steam_peer.get_steam64_from_peer_id(peer_id)
 
 	if steam_id <= 0:
 		return "Unknown"
-
-	# This machine's own Steam account.
-	if steam_id == Steam.getSteamID():
-		return Steam.getPersonaName()
 
 	return Steam.getFriendPersonaName(steam_id)
 
