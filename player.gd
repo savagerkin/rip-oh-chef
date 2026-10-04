@@ -22,6 +22,9 @@ var max_health: float = 100.0
 @export var weapon: Weapon
 @export var health_bar: ProgressBar
 @export var username: Label
+
+var player_username: String = ""
+
 func _enter_tree() -> void:
 	set_multiplayer_authority(name.to_int())
 
@@ -38,7 +41,15 @@ func _ready() -> void:
 	if is_owner:
 		camera.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	call_deferred("load_username")
+
+		if multiplayer.multiplayer_peer is SteamMultiplayerPeer:
+			set_username.rpc(
+				Steam.getPersonaName()
+			)
+		else:
+			set_username.rpc(
+				"Player " + str(multiplayer.get_unique_id())
+			)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -68,6 +79,7 @@ func _physics_process(delta: float) -> void:
 	# Shoot
 	if Input.is_action_pressed("shoot"):
 		weapon.fire()
+
 	# Lock mouse
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -88,17 +100,6 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-func load_username() -> void:
-	var loaded_name = Networking.get_username(
-		get_multiplayer_authority()
-	)
-
-	if loaded_name == "Unknown":
-		await get_tree().create_timer(0.5).timeout
-		load_username()
-		return
-
-	username.text = loaded_name
 
 # Called by the weapon when this player gets hit.
 func take_damage(damage: float) -> void:
@@ -113,14 +114,21 @@ func take_damage(damage: float) -> void:
 		damage
 	)
 
+
 # For now it teleports to the middle, and replaces ur health
 func die() -> void:
 	if health <= 0:
 		health = max_health
 		self.global_position = Vector3(0,10,0)
 		print("Player ", name, " died")
-		
-		
+
+
+# To set the username for the other users.
+@rpc("authority", "call_local", "reliable")
+func set_username(new_username: String) -> void:
+	player_username = new_username
+	username.text = new_username
+
 
 # To change the health of the authority aka. do damage on them.
 # We are telling the authority that they took damage, and change accordingly.
@@ -130,6 +138,7 @@ func request_damage(damage: float) -> void:
 		return
 
 	apply_damage(damage)
+
 
 func apply_damage(damage: float) -> void:
 	health -= damage

@@ -53,28 +53,6 @@ func on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: 
 func on_join_requested(lobby_id: int, _steam_id: int) -> void:
 	Steam.joinLobby(lobby_id)
 
-func get_username(peer_id: int) -> String:
-	if multiplayer.multiplayer_peer is not SteamMultiplayerPeer:
-		return "Player " + str(peer_id)
-
-	if peer_id == multiplayer.get_unique_id():
-		return Steam.getPersonaName()
-
-	var steam_peer := multiplayer.multiplayer_peer as SteamMultiplayerPeer
-
-	var steam_id: int = steam_peer.get_steam64_from_peer_id(peer_id)
-
-	print(
-		"peer_id: ",
-		peer_id,
-		" steam_id: ",
-		steam_id
-	)
-
-	if steam_id <= 0:
-		return "Unknown"
-
-	return Steam.getFriendPersonaName(steam_id)
 # LOCAL TESTING
 
 func host_local() -> void:
