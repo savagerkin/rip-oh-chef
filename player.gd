@@ -38,7 +38,7 @@ func _ready() -> void:
 	if is_owner:
 		camera.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	load_username()
+	call_deferred("load_username")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -89,9 +89,16 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func load_username() -> void:
-	username.text = Networking.get_username(
+	var loaded_name = Networking.get_username(
 		get_multiplayer_authority()
 	)
+
+	if loaded_name == "Unknown":
+		await get_tree().create_timer(0.5).timeout
+		load_username()
+		return
+
+	username.text = loaded_name
 
 # Called by the weapon when this player gets hit.
 func take_damage(damage: float) -> void:
