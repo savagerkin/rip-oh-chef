@@ -21,8 +21,7 @@ var max_health: float = 100.0
 @export var camera: Camera3D
 @export var weapon: Weapon
 @export var health_bar: ProgressBar
-@export var steam_avatar: TextureRect
-@export var player_separation_distance: float = 1.1
+@export var username: Label
 func _enter_tree() -> void:
 	set_multiplayer_authority(name.to_int())
 
@@ -30,11 +29,23 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	health_bar.max_value = max_health
 	health_bar.value = health
-	
-	if is_multiplayer_authority():
+
+	var is_owner := is_multiplayer_authority()
+
+	set_physics_process(is_owner)
+	set_process_input(is_owner)
+	set_process_unhandled_input(is_owner)
+
+	if is_owner:
 		camera.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
+	load_username()
+#For loading username
+func load_username() -> void:
+	username.text = Networking.get_steam_username(
+		get_multiplayer_authority()
+	)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_multiplayer_authority():
@@ -52,8 +63,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if not is_multiplayer_authority():
-		return
 
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta

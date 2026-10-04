@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://du6tdy7622q7m" path="res://player.gd" id="1_v0iea"]
 [ext_resource type="PackedScene" uid="uid://bem6v0fjickci" path="res://Scenes/weapon.tscn" id="2_cvnsp"]
 [ext_resource type="PackedScene" uid="uid://qu2yl5mtlfk0" path="res://Scenes/health_bar.tscn" id="3_6t5aa"]
-[ext_resource type="PackedScene" uid="uid://xfy3urcad34l" path="res://Scenes/steam_profile.tscn" id="3_vgqql"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_a08nb"]
 
@@ -25,15 +24,18 @@ properties/2/path = NodePath(".:health")
 properties/2/spawn = true
 properties/2/replication_mode = 2
 
+[sub_resource type="LabelSettings" id="LabelSettings_6t5aa"]
+
 [sub_resource type="ViewportTexture" id="ViewportTexture_a08nb"]
 viewport_path = NodePath("HealthBarViewport")
 
-[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "camera", "weapon", "health_bar")]
+[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "camera", "weapon", "health_bar", "username")]
 script = ExtResource("1_v0iea")
 head = NodePath("CameraHolder")
 camera = NodePath("CameraHolder/Camera3D")
 weapon = NodePath("CameraHolder/Weapon Holder/Weapon")
 health_bar = NodePath("HealthBarViewport/HealthBar")
+username = NodePath("HealthBarViewport/Label")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1729655473]
 shape = SubResource("CapsuleShape3D_a08nb")
@@ -62,10 +64,6 @@ transform = Transform3D(0.38, 0, 0, 0, 0.38, 0, 0, 0, 0.38, 0, 0, 0)
 [node name="Camera3D" type="Camera3D" parent="CameraHolder" unique_id=2085396468]
 near = 0.459
 
-[node name="SteamProfileViewport" type="SubViewport" parent="." unique_id=751202491]
-
-[node name="SteamProfile" parent="SteamProfileViewport" unique_id=1907267092 instance=ExtResource("3_vgqql")]
-
 [node name="HealthBarViewport" type="SubViewport" parent="." unique_id=573421060]
 disable_3d = true
 transparent_bg = true
@@ -73,8 +71,21 @@ transparent_bg = true
 [node name="HealthBar" parent="HealthBarViewport" unique_id=1168862445 instance=ExtResource("3_6t5aa")]
 value = 90.0
 
+[node name="Label" type="Label" parent="HealthBarViewport" unique_id=640054999]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -76.5
+offset_top = -39.395004
+offset_right = 76.50055
+offset_bottom = -16.394669
+grow_horizontal = 2
+grow_vertical = 2
+text = "asdasdsasdasdasda"
+label_settings = SubResource("LabelSettings_6t5aa")
+
 [node name="HealthBarSprite" type="Sprite3D" parent="." unique_id=1933927513]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0991826, 0)
 texture = SubResource("ViewportTexture_a08nb")
-
-[node name="ProfilePictureSprite" type="Sprite3D" parent="." unique_id=1464571519]
