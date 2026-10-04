@@ -39,7 +39,6 @@ text = "Local Join"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 
 [node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="." unique_id=703541794]
-_spawnable_scenes = PackedStringArray("res://Scenes/player_controller.tscn")
 spawn_path = NodePath("..")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1379005815]

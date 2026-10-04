@@ -87,3 +87,5 @@ func join_local() -> void:
 	multiplayer.multiplayer_peer = peer
 
 	print("Joining local server...")
+	
+	

@@ -21,8 +21,8 @@ var max_health: float = 100.0
 @export var camera: Camera3D
 @export var weapon: Weapon
 @export var health_bar: ProgressBar
-
-
+@export var steam_avatar: TextureRect
+@export var player_separation_distance: float = 1.1
 func _enter_tree() -> void:
 	set_multiplayer_authority(name.to_int())
 
@@ -30,7 +30,7 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	health_bar.max_value = max_health
 	health_bar.value = health
-
+	
 	if is_multiplayer_authority():
 		camera.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -99,6 +99,15 @@ func take_damage(damage: float) -> void:
 		damage
 	)
 
+# For now it teleports to the middle, and replaces ur health
+func die() -> void:
+	if health <= 0:
+		health = max_health
+		self.position = Vector3(0,10,0)
+		print("Player ", name, " died")
+		
+		
+
 # To change the health of the authority aka. do damage on them.
 # We are telling the authority that they took damage, and change accordingly.
 @rpc("any_peer", "call_remote", "reliable")
@@ -107,7 +116,6 @@ func request_damage(damage: float) -> void:
 		return
 
 	apply_damage(damage)
-
 
 func apply_damage(damage: float) -> void:
 	health -= damage
@@ -124,7 +132,3 @@ func apply_damage(damage: float) -> void:
 
 	if health <= 0.0:
 		die()
-
-
-func die() -> void:
-	print("Player ", name, " died")

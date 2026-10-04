@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://xfy3urcad34l"]
+
+[node name="SteamProfile" type="TextureRect" unique_id=1907267092]
+offset_right = 40.0
+offset_bottom = 40.0

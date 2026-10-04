@@ -22,8 +22,14 @@ func on_host_created() -> void:
 
 	# Server creates players for connecting clients.
 	multiplayer.peer_connected.connect(on_peer_connected)
+	multiplayer.peer_disconnected.connect(on_peer_disconnected)
 
-
+#Remove the player when they disconnect
+func on_peer_disconnected(peer_id: int) -> void:
+	var player := get_node_or_null(str(peer_id))
+	if player:
+		player.queue_free()
+	
 func on_peer_connected(peer_id: int) -> void:
 	if multiplayer.is_server():
 		spawner.spawn(peer_id)
@@ -40,9 +46,9 @@ func spawn_player(peer_id: Variant) -> Node:
 
 func initialize_player(player: Player) -> void:
 	player.position = $SpawnPoint.position
-
-	for other in players:
-		player.add_collision_exception_with(other)
+	# This removes the collison of others i think lol
+	# for other in players:
+	#	player.add_collision_exception_with(other)
 
 	players.append(player)
 
