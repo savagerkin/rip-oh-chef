@@ -2,6 +2,14 @@ name: Build Game
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (example: v0.1.0)"
+        required: true
+        default: "v0.1.0"
+
+permissions:
+  contents: write
 
 env:
   GODOT_VERSION: 4.7.2
@@ -86,3 +94,37 @@ jobs:
           name: RipOhChef-${{ matrix.platform }}
           path: build/${{ matrix.platform }}
           if-no-files-found: error
+
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Builds
+        uses: actions/download-artifact@v4
+        with:
+          path: builds
+
+      - name: Show Builds
+        run: |
+          find builds -type f
+
+      - name: Package Windows Build
+        run: |
+          cd builds/RipOhChef-windows
+          zip -r ../../RipOhChef-Windows.zip .
+
+      - name: Rename Mac Build
+        run: |
+          cp builds/RipOhChef-mac/RipOhChef.zip RipOhChef-macOS.zip
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ inputs.version }}" \
+            RipOhChef-Windows.zip \
+            RipOhChef-macOS.zip \
+            --title "Rip Oh Chef ${{ inputs.version }}" \
+            --generate-notes
