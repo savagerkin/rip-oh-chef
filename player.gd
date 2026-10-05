@@ -13,6 +13,8 @@ const MOUSE_SENSITIVITY := 0.002
 
 		if health_bar:
 			health_bar.value = health
+		if hud_health_bar:
+			hud_health_bar.value = health
 
 var max_health: float = 100.0
 
@@ -21,35 +23,71 @@ var max_health: float = 100.0
 @export var camera: Camera3D
 @export var weapon: Weapon
 @export var health_bar: ProgressBar
+@export var hud_health_bar : ProgressBar
 @export var username: Label
+
+# Set by main.gd when this Player is spawned.
+var steam_id: int = 0
 
 var player_username: String = ""
 
 func _enter_tree() -> void:
 	set_multiplayer_authority(name.to_int())
 
+
 func _ready() -> void:
+	#The one above head
 	health_bar.max_value = max_health
 	health_bar.value = health
-
+	# The one in HUD
+	hud_health_bar.max_value = max_health
+	hud_health_bar.value = health
+	
 	var is_owner := is_multiplayer_authority()
-
+	#Stop the player from controlling others.
 	set_physics_process(is_owner)
 	set_process_input(is_owner)
 	set_process_unhandled_input(is_owner)
-
+	#Hide the health bar if its not yours
+	hud_health_bar.visible = is_owner
 	if is_owner:
 		camera.current = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	
+	load_username()
 
-		if multiplayer.multiplayer_peer is SteamMultiplayerPeer:
-			set_username.rpc(
-				Steam.getPersonaName()
-			)
-		else:
-			set_username.rpc(
-				"Player " + str(multiplayer.get_unique_id())
-			)
+
+# Loads this player's username.
+func load_username() -> void:
+	# Local ENet testing.
+	if multiplayer.multiplayer_peer is not SteamMultiplayerPeer:
+		player_username = "Player " + str(
+			get_multiplayer_authority()
+		)
+	#This one grabs from steam thanks to that
+		username.text = player_username
+		return
+
+	# No Steam ID was assigned.
+	if steam_id <= 0:
+		username.text = "Unknown"
+		return
+
+	player_username = Networking.get_username_from_steam_id(
+		steam_id
+	)
+
+	# Steam may still be downloading the other player's
+	# persona information.
+	if player_username == "Unknown":
+		await get_tree().create_timer(0.5).timeout
+
+		if is_inside_tree():
+			load_username()
+
+		return
+
+	username.text = player_username
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -121,13 +159,6 @@ func die() -> void:
 		health = max_health
 		self.global_position = Vector3(0,10,0)
 		print("Player ", name, " died")
-
-
-# To set the username for the other users.
-@rpc("authority", "call_local", "reliable")
-func set_username(new_username: String) -> void:
-	player_username = new_username
-	username.text = new_username
 
 
 # To change the health of the authority aka. do damage on them.

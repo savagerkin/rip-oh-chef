@@ -1,6 +1,9 @@
 extends Node
 
 signal host_created()
+signal joined_game()
+
+signal steam_identity_received(peer_id: int, steam_id: int)
 
 const LOBBY_TYPE := Steam.LobbyType.LOBBY_TYPE_FRIENDS_ONLY
 const MAX_MEMBERS := 4
@@ -16,8 +19,12 @@ func _ready() -> void:
 	Steam.lobby_joined.connect(on_lobby_joined)
 	Steam.join_requested.connect(on_join_requested)
 
+	multiplayer.connected_to_server.connect(on_connected_to_server)
+
+
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
+
 
 # STEAM
 
@@ -41,17 +48,68 @@ func on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: 
 	if response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS:
 		if Steam.getLobbyOwner(lobby_id) == Steam.getSteamID():
 			return
-
 		var steam_peer := SteamMultiplayerPeer.new()
 		steam_peer.server_relay = true
 		steam_peer.create_client(Steam.getLobbyOwner(lobby_id))
 
 		peer = steam_peer
 		multiplayer.multiplayer_peer = peer
-
+		joined_game.emit()
 
 func on_join_requested(lobby_id: int, _steam_id: int) -> void:
 	Steam.joinLobby(lobby_id)
+
+
+# Called on a client when it successfully connects to the server.
+func on_connected_to_server() -> void:
+	if multiplayer.multiplayer_peer is not SteamMultiplayerPeer:
+		return
+
+	send_steam_identity.rpc_id(
+		1,
+		Steam.getSteamID()
+	)
+
+
+# Sends this client's Steam ID to the server.
+@rpc("any_peer", "call_remote", "reliable")
+func send_steam_identity(steam_id: int) -> void:
+	if not multiplayer.is_server():
+		return
+
+	var peer_id := multiplayer.get_remote_sender_id()
+
+	steam_identity_received.emit(
+		peer_id,
+		steam_id
+	)
+
+
+# Gets a Steam username from a Steam ID.
+func get_username_from_steam_id(steam_id: int) -> String:
+	if steam_id <= 0:
+		return "Unknown"
+
+	# Our own Steam account.
+	if steam_id == Steam.getSteamID():
+		return Steam.getPersonaName()
+
+	# Other Steam player.
+	var steam_username: String = Steam.getFriendPersonaName(
+		steam_id
+	)
+
+	if steam_username.is_empty():
+		# Ask Steam to cache their persona information.
+		Steam.requestUserInformation(
+			steam_id,
+			false
+		)
+
+		return "Unknown"
+
+	return steam_username
+
 
 # LOCAL TESTING
 
@@ -84,5 +142,3 @@ func join_local() -> void:
 	multiplayer.multiplayer_peer = peer
 
 	print("Joining local server...")
-	
-	

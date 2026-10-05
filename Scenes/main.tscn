@@ -7,26 +7,29 @@ size = Vector3(20, 1, 20)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_a08nb"]
 
-[node name="main" type="Node3D" unique_id=408063236]
+[node name="main" type="Node3D" unique_id=408063236 node_paths=PackedStringArray("spawner", "canvasLayer", "spawnPoint")]
 script = ExtResource("1_jjgbg")
+spawner = NodePath("MultiplayerSpawner")
+canvasLayer = NodePath("JoiningLayer")
+spawnPoint = NodePath("SpawnPoint")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1174963678]
+[node name="JoiningLayer" type="CanvasLayer" parent="." unique_id=1174963678]
 
-[node name="Host" type="Button" parent="CanvasLayer" unique_id=1273459220]
+[node name="Host" type="Button" parent="JoiningLayer" unique_id=1273459220]
 offset_right = 44.0
 offset_bottom = 31.0
 focus_mode = 0
 text = "Host
 "
 
-[node name="LocalHost" type="Button" parent="CanvasLayer" unique_id=559873721]
+[node name="LocalHost" type="Button" parent="JoiningLayer" unique_id=559873721]
 offset_top = 38.0
 offset_right = 89.0
 offset_bottom = 69.0
 focus_mode = 0
 text = "Local Host"
 
-[node name="Local Join" type="Button" parent="CanvasLayer" unique_id=1533462682]
+[node name="Local Join" type="Button" parent="JoiningLayer" unique_id=1533462682]
 offset_top = 77.0
 offset_right = 78.0
 offset_bottom = 108.0
@@ -58,7 +61,7 @@ distance_fade_shadow = 85.2
 omni_range = 15.989
 omni_attenuation = -0.639
 
-[connection signal="pressed" from="CanvasLayer/Host" to="." method="_on_host_pressed"]
-[connection signal="pressed" from="CanvasLayer/LocalHost" to="." method="_on_local_host_pressed"]
-[connection signal="pressed" from="CanvasLayer/Local Join" to="." method="_on_local_join_pressed"]
+[connection signal="pressed" from="JoiningLayer/Host" to="." method="_on_host_pressed"]
+[connection signal="pressed" from="JoiningLayer/LocalHost" to="." method="_on_local_host_pressed"]
+[connection signal="pressed" from="JoiningLayer/Local Join" to="." method="_on_local_join_pressed"]
 [connection signal="spawned" from="MultiplayerSpawner" to="." method="_on_multiplayer_spawner_spawned"]
