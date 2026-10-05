@@ -1,12 +1,12 @@
 name: Build Game
 
 on:
+  push:
+    branches:
+      - main
+
+  # Keeps the button in GitHub so you can still run it manually.
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Release version (example: v0.1.0)"
-        required: true
-        default: "v0.1.0"
 
 permissions:
   contents: write
@@ -122,12 +122,37 @@ jobs:
         run: |
           cp builds/RipOhChef-mac/RipOhChef.zip RipOhChef-macOS.zip
 
+      # Delete the oldest GitHub release, if one exists.
+      - name: Delete Oldest Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OLD_TAG=$(gh release list \
+            --limit 100 \
+            --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | .[0].tagName // empty')
+
+          if [ -n "$OLD_TAG" ]; then
+            echo "Deleting oldest release: $OLD_TAG"
+            gh release delete "$OLD_TAG" --yes
+          else
+            echo "No previous release found."
+          fi
+
+      # Every Actions run gets a unique number.
+      # Example: build-12, build-13, build-14...
       - name: Create Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ inputs.version }}" \
+          TAG="build-${GITHUB_RUN_NUMBER}"
+
+          echo "Creating release: $TAG"
+
+          gh release create "$TAG" \
             RipOhChef-Windows.zip \
             RipOhChef-macOS.zip \
-            --title "Rip Oh Chef ${{ inputs.version }}" \
-            --generate-notes
+            --target "${GITHUB_SHA}" \
+            --title "Rip Oh Chef $TAG" \
+            --generate-notes \
+            --latest
