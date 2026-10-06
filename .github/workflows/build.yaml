@@ -133,7 +133,7 @@ jobs:
           if [ -n "$OLD_TAG" ]; then
             echo "Deleting oldest release: $OLD_TAG"
             gh release delete "$OLD_TAG" --yes
-          else:
+          else
             echo "No previous release found."
           fi
 
