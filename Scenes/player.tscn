@@ -1,7 +1,8 @@
-[gd_scene format=3 uid="uid://b5dxiciiiyot3"]
+[gd_scene format=4 uid="uid://b5dxiciiiyot3"]
 
 [ext_resource type="Script" uid="uid://du6tdy7622q7m" path="res://scripts/player/player.gd" id="1_qhqgy"]
 [ext_resource type="PackedScene" uid="uid://bem6v0fjickci" path="res://Scenes/weapon.tscn" id="2_dqkch"]
+[ext_resource type="Script" uid="uid://cu8nyj3k4s0cx" path="res://scenes/head_hitbox.gd" id="3_dqkch"]
 [ext_resource type="PackedScene" uid="uid://qu2yl5mtlfk0" path="res://Scenes/health_bar.tscn" id="3_qlg0r"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6t5aa"]
@@ -11,7 +12,19 @@
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8vrlf"]
 albedo_color = Color(1, 0.37773857, 0.6982174, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_a08nb"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_qhqgy"]
+_surfaces = [{
+"aabb": AABB(-0.5, -0.5, -0.5, 1, 1, 1),
+"attribute_data": PackedByteArray("AACAPwAAAAAAAIA/AAAAP6uqKj8AAAA/q6qqPgAAAD+rqqo+AACAPwAAAAAAAIA/q6oqPwAAAD8AAIA/AAAAP6uqKj8AAIA/AAAAAAAAAD+rqqo+AAAAPwAAAAAAAIA/q6oqPwAAAD+rqio/AACAP6uqqj4AAIA/AAAAAAAAAACrqqo+AAAAAAAAAAAAAAA/AACAPwAAAD8AAIA/AACAP6uqKj8AAIA/q6oqPwAAAACrqio/AAAAP6uqqj4AAAA/q6qqPgAAAACrqqo+AAAAPwAAAAAAAAA/q6oqPwAAAAAAAIA/AAAAAKuqKj8AAAA/q6qqPgAAAD+rqio/AAAAP6uqqj4AAIA/q6qqPgAAAACrqio/AAAAAKuqqj4AAAA/"),
+"format": 34359738391,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 36,
+"vertex_data": PackedByteArray("AAAAvwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAL8AAAC/AAAAvwAAAD8AAAA/AAAAvwAAAL8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAvwAAAD8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAL8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAPwAAAL8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAA/AAAAPwAAAD8AAAC/AAAAvwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAC/AAAAPwAAAD8AAAA/AAAAPwAAAD8AAAC/AAAAPwAAAL8AAAA//////wAA/7//////AAD/v/////8AAP+/AAD/f/9//78AAP9//3//vwAA/3//f/+//38AAP///7//fwAA////v/9/AAD///+/AAD/f/9//78AAP9//3//vwAA/3//f/+//3///wAA/7//f///AAD/v/9///8AAP+//3//f////7//f/9/////v/9//3////+//38AAP///7//fwAA////v/9/AAD///+/////f/////////9//////////3///////3//f////7//f/9/////v/9//3////+//////wAA/7//////AAD/v/////8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/////f/////////9//////////3//////")
+}]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1vivr"]
+radius = 0.55
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_5ur5x"]
 properties/0/path = NodePath(".:health")
@@ -32,16 +45,18 @@ properties/3/replication_mode = 2
 [sub_resource type="ViewportTexture" id="ViewportTexture_a08nb"]
 viewport_path = NodePath("HealthBarViewport")
 
-[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "camera", "weapon", "health_bar", "hud_health_bar", "username", "collison_shape", "body_mesh")]
+[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "eyes_mesh", "camera", "weapon", "health_bar", "hud_health_bar", "username", "collison_shape", "body_mesh", "head_hitbox")]
 script = ExtResource("1_qhqgy")
-head = NodePath("CollisionShape3D/BodyMesh/CameraHolder")
-camera = NodePath("CollisionShape3D/BodyMesh/CameraHolder/Camera3D")
-weapon = NodePath("CollisionShape3D/BodyMesh/CameraHolder/Weapon Holder/Weapon")
+head = NodePath("CollisionShape3D/CameraHolder")
+eyes_mesh = NodePath("CollisionShape3D/BodyMesh/Eyes")
+camera = NodePath("CollisionShape3D/CameraHolder/Camera3D")
+weapon = NodePath("CollisionShape3D/CameraHolder/Weapon Holder/Weapon")
 health_bar = NodePath("HealthBarViewport/HealthBar")
 hud_health_bar = NodePath("HUD/HealthBar")
 username = NodePath("HealthBarViewport/Label")
 collison_shape = NodePath("CollisionShape3D")
 body_mesh = NodePath("CollisionShape3D/BodyMesh")
+head_hitbox = NodePath("CollisionShape3D/HeadShotHtibox")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1729655473]
 shape = SubResource("CapsuleShape3D_6t5aa")
@@ -50,22 +65,29 @@ shape = SubResource("CapsuleShape3D_6t5aa")
 mesh = SubResource("CapsuleMesh_1vivr")
 surface_material_override/0 = SubResource("StandardMaterial3D_8vrlf")
 
-[node name="Eyes" type="CSGMesh3D" parent="CollisionShape3D/BodyMesh" unique_id=469426701]
+[node name="Eyes" type="MeshInstance3D" parent="CollisionShape3D/BodyMesh" unique_id=276111374]
 transform = Transform3D(0.546557, 0, 0, 0, 0.3782496, 0, 0, 0, 0.2851209, 0, 0.53788763, -0.35944456)
-layers = 2
-mesh = SubResource("BoxMesh_a08nb")
+mesh = SubResource("ArrayMesh_qhqgy")
 
-[node name="CameraHolder" type="Node3D" parent="CollisionShape3D/BodyMesh" unique_id=2070787474]
+[node name="CameraHolder" type="Node3D" parent="CollisionShape3D" unique_id=2070787474]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72519636, 0)
 
-[node name="Weapon Holder" type="Node3D" parent="CollisionShape3D/BodyMesh/CameraHolder" unique_id=1617359221]
+[node name="Weapon Holder" type="Node3D" parent="CollisionShape3D/CameraHolder" unique_id=1617359221]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.5519991, -0.63, -0.619786)
 
-[node name="Weapon" parent="CollisionShape3D/BodyMesh/CameraHolder/Weapon Holder" unique_id=142705459 instance=ExtResource("2_dqkch")]
+[node name="Weapon" parent="CollisionShape3D/CameraHolder/Weapon Holder" unique_id=142705459 instance=ExtResource("2_dqkch")]
 transform = Transform3D(0.38, 0, 0, 0, 0.38, 0, 0, 0, 0.38, 0, 0, 0)
 
-[node name="Camera3D" type="Camera3D" parent="CollisionShape3D/BodyMesh/CameraHolder" unique_id=2085396468]
-near = 0.459
+[node name="Camera3D" type="Camera3D" parent="CollisionShape3D/CameraHolder" unique_id=2085396468]
+near = 0.232
+
+[node name="HeadShotHtibox" type="Area3D" parent="CollisionShape3D" unique_id=1278579271 node_paths=PackedStringArray("player")]
+script = ExtResource("3_dqkch")
+player = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CollisionShape3D/HeadShotHtibox" unique_id=1400839609]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48717058, 0)
+shape = SubResource("SphereShape3D_1vivr")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=1544537949]
 replication_config = SubResource("SceneReplicationConfig_5ur5x")

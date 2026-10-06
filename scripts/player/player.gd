@@ -1,6 +1,8 @@
 class_name Player
 extends CharacterBody3D
 
+signal died(player: Player)
+
 const MOUSE_SENSITIVITY := 0.002
 
 const Health = preload("uid://baj13oo0iqyx4")
@@ -17,6 +19,7 @@ var health_component : PlayerHealth = Health.new()
 
 
 @export var head: Node3D
+@export var eyes_mesh: MeshInstance3D
 @export var camera: Camera3D
 @export var weapon: Weapon
 @export var health_bar: ProgressBar
@@ -26,6 +29,7 @@ var health_component : PlayerHealth = Health.new()
 @export var body_mesh: MeshInstance3D
 @export var crouching_height: float = 1.0
 @export var standing_height: float = 2.0
+@export var head_hitbox: Area3D
 
 var max_health: float:
 	get:
@@ -63,10 +67,15 @@ func _ready() -> void:
 	var is_owner := is_multiplayer_authority()
 
 	hud_health_bar.visible = is_owner
+	if eyes_mesh:
+		eyes_mesh.visible = not is_owner
 
 	if is_owner:
 		hud_health_bar.max_value = max_health
 		hud_health_bar.value = health
+		weapon.ray.add_exception(self)
+		if head_hitbox:
+			weapon.ray.add_exception(head_hitbox)
 
 	set_physics_process(true)
 	set_process_input(is_owner)
@@ -174,6 +183,9 @@ func request_damage(damage: float) -> void:
 
 
 func apply_damage(damage: float) -> void:
+	if health <= 0.0:
+		return
+
 	health_component.apply_damage(damage)
 
 	print("Player ", name, " took ", damage," damage. Health: ", health)
@@ -182,7 +194,20 @@ func apply_damage(damage: float) -> void:
 
 
 func die() -> void:
-	if health <= 0:
-		health_component.reset()
-		self.global_position = Vector3(0, 10, 0)
+	if health <= 0 and is_multiplayer_authority():
 		print("Player ", name, " died")
+		died.emit(self)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func respawn_at(spawn_position: Vector3) -> void:
+	if not is_multiplayer_authority():
+		return
+
+	var sender_id := multiplayer.get_remote_sender_id()
+	if sender_id != 0 and sender_id != 1:
+		return
+
+	health_component.reset()
+	velocity = Vector3.ZERO
+	global_position = spawn_position

@@ -4,9 +4,9 @@ const PLAYER_CONTROLLER = preload("uid://b5dxiciiiyot3")
 
 var players: Array[CharacterBody3D]
 
-@export var spawner: MultiplayerSpawner 
-@export var canvasLayer: CanvasLayer 
-@export var spawnPoint: Node3D
+@export var spawner: MultiplayerSpawner
+@export var canvas_layer: CanvasLayer
+@export var spawn_points: Node3D
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("esc"):
@@ -36,17 +36,17 @@ func on_host_created() -> void:
 	# Server creates players for connecting clients.
 	multiplayer.peer_connected.connect(on_peer_connected)
 	multiplayer.peer_disconnected.connect(on_peer_disconnected)
-	
+
 # Called when someone joins the game
 func on_joined_game() -> void:
-	canvasLayer.hide()
-	
+	canvas_layer.hide()
+
 #Remove the player when they disconnect
 func on_peer_disconnected(peer_id: int) -> void:
 	var player := get_node_or_null(str(peer_id))
 	if player:
 		player.queue_free()
-	
+
 
 func on_peer_connected(peer_id: int) -> void:
 	if not multiplayer.is_server():
@@ -68,12 +68,31 @@ func on_steam_identity_received(peer_id: int, steam_id: int) -> void:
 
 	spawn_network_player(peer_id, steam_id)
 
-
 func spawn_network_player(peer_id: int, steam_id: int) -> void:
-	spawner.spawn({
+	if not multiplayer.is_server():
+		return
+
+	var points: Array[Node3D] = []
+
+	for child in spawn_points.get_children():
+		if child is Node3D:
+			points.append(child)
+
+	if points.is_empty():
+		push_error("No spawn points assigned")
+		return
+
+	var point: Node3D = points.pick_random()
+	var spawn_root := spawner.get_node(spawner.spawn_path) as Node3D
+
+	var player := spawner.spawn({
 		"peer_id": peer_id,
-		"steam_id": steam_id
-	})
+		"steam_id": steam_id,
+		"position": spawn_root.to_local(point.global_position)
+	}) as Player
+
+	if player:
+		initialize_player(player)
 
 
 func spawn_player(data: Variant) -> Node:
@@ -84,20 +103,17 @@ func spawn_player(data: Variant) -> Node:
 
 	player.name = str(peer_id)
 	player.set_multiplayer_authority(peer_id)
-
 	player.steam_id = steam_id
+	player.position = data["position"]
 
 	return player
 
 
 func initialize_player(player: Player) -> void:
-	player.position = spawnPoint.position
-	
-	# This removes the collison of others i think lol
-	# for other in players:
-	#	player.add_collision_exception_with(other)
+	if not players.has(player):
+		players.append(player)
+		player.died.connect(on_player_died)
 
-	players.append(player)
 
 
 func _on_multiplayer_spawner_spawned(node: Node) -> void:
@@ -106,15 +122,49 @@ func _on_multiplayer_spawner_spawned(node: Node) -> void:
 
 
 func _on_host_pressed() -> void:
-	canvasLayer.hide()
+	canvas_layer.hide()
 	Networking.host_lobby()
 
 
 func _on_local_host_pressed() -> void:
-	canvasLayer.hide()
+	canvas_layer.hide()
 	Networking.host_local()
 
 
 func _on_local_join_pressed() -> void:
-	canvasLayer.hide()
+	canvas_layer.hide()
 	Networking.join_local()
+
+
+func on_player_died(_player: Player) -> void:
+	request_respawn.rpc_id(1)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func request_respawn() -> void:
+	if not multiplayer.is_server():
+		return
+
+	var peer_id := multiplayer.get_remote_sender_id()
+	var spawn_root := spawner.get_node(spawner.spawn_path)
+	var player := spawn_root.get_node_or_null(str(peer_id)) as Player
+
+	if player == null or player.get_multiplayer_authority() != peer_id:
+		return
+
+	var points: Array[Node3D] = []
+
+	for child in spawn_points.get_children():
+		if child is Node3D:
+			points.append(child)
+
+	if points.is_empty():
+		push_error("No spawn points assigned")
+		return
+
+	var point: Node3D = points.pick_random()
+
+	if player.is_multiplayer_authority():
+		player.respawn_at(point.global_position)
+	else:
+		player.respawn_at.rpc_id(peer_id, point.global_position)

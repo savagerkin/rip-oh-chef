@@ -10,6 +10,7 @@ extends Node3D
 
 
 func _ready() -> void:
+	ray.collide_with_areas = true
 	timer.one_shot = true
 	timer.wait_time = fire_rate
 
@@ -29,10 +30,12 @@ func fire() -> void:
 	if ray.is_colliding():
 		var target := ray.get_collider()
 		end_position = ray.to_local(ray.get_collision_point())
-
-		if target is Player:
+		
+		if target is HeadHitbox:
 			target.take_damage(damage)
-
+		elif target is Player:
+			target.take_damage(damage)
+		
 	draw_debug_ray(end_position)
 
 	print("Shot for ", damage)
