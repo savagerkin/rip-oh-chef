@@ -4,14 +4,14 @@
 [ext_resource type="PackedScene" uid="uid://bem6v0fjickci" path="res://Scenes/weapon.tscn" id="2_cvnsp"]
 [ext_resource type="PackedScene" uid="uid://qu2yl5mtlfk0" path="res://Scenes/health_bar.tscn" id="3_6t5aa"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_a08nb"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_a08nb"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6t5aa"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_a08nb"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rd8vp"]
 albedo_color = Color(0.88573015, 0, 0.3445546, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_a08nb"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_5ur5x"]
 properties/0/path = NodePath(".:position")
@@ -23,47 +23,51 @@ properties/1/replication_mode = 1
 properties/2/path = NodePath(".:health")
 properties/2/spawn = true
 properties/2/replication_mode = 2
+properties/3/path = NodePath(".:movement_state")
+properties/3/spawn = true
+properties/3/replication_mode = 1
 
 [sub_resource type="LabelSettings" id="LabelSettings_6t5aa"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_a08nb"]
 viewport_path = NodePath("HealthBarViewport")
 
-[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "camera", "weapon", "health_bar", "hud_health_bar", "username")]
+[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "camera", "weapon", "health_bar", "hud_health_bar", "username", "collison_shape")]
 script = ExtResource("1_v0iea")
-head = NodePath("CameraHolder")
-camera = NodePath("CameraHolder/Camera3D")
-weapon = NodePath("CameraHolder/Weapon Holder/Weapon")
+head = NodePath("CollisionShape3D/Body/CameraHolder")
+camera = NodePath("CollisionShape3D/Body/CameraHolder/Camera3D")
+weapon = NodePath("CollisionShape3D/Body/CameraHolder/Weapon Holder/Weapon")
 health_bar = NodePath("HealthBarViewport/HealthBar")
 hud_health_bar = NodePath("HUD/HealthBar")
 username = NodePath("HealthBarViewport/Label")
+collison_shape = NodePath("CollisionShape3D")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1729655473]
-shape = SubResource("CapsuleShape3D_a08nb")
+shape = SubResource("CapsuleShape3D_6t5aa")
 
-[node name="Eyes" type="CSGMesh3D" parent="." unique_id=469426701]
+[node name="Body" type="CSGMesh3D" parent="CollisionShape3D" unique_id=709794412]
+mesh = SubResource("CapsuleMesh_a08nb")
+material = SubResource("StandardMaterial3D_rd8vp")
+
+[node name="Eyes" type="CSGMesh3D" parent="CollisionShape3D/Body" unique_id=469426701]
 transform = Transform3D(0.546557, 0, 0, 0, 0.3782496, 0, 0, 0, 0.2851209, 0, 0.53788763, -0.35944456)
 layers = 2
 mesh = SubResource("BoxMesh_a08nb")
 
-[node name="Body" type="CSGMesh3D" parent="." unique_id=709794412]
-mesh = SubResource("CapsuleMesh_a08nb")
-material = SubResource("StandardMaterial3D_rd8vp")
+[node name="CameraHolder" type="Node3D" parent="CollisionShape3D/Body" unique_id=2070787474]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72519636, 0)
+
+[node name="Weapon Holder" type="Node3D" parent="CollisionShape3D/Body/CameraHolder" unique_id=1617359221]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.5519991, -0.63, -0.619786)
+
+[node name="Weapon" parent="CollisionShape3D/Body/CameraHolder/Weapon Holder" unique_id=142705459 instance=ExtResource("2_cvnsp")]
+transform = Transform3D(0.38, 0, 0, 0, 0.38, 0, 0, 0, 0.38, 0, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CollisionShape3D/Body/CameraHolder" unique_id=2085396468]
+near = 0.459
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=1544537949]
 replication_config = SubResource("SceneReplicationConfig_5ur5x")
-
-[node name="CameraHolder" type="Node3D" parent="." unique_id=2070787474]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72519636, 0)
-
-[node name="Weapon Holder" type="Node3D" parent="CameraHolder" unique_id=1617359221]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.5519991, -0.63, -0.619786)
-
-[node name="Weapon" parent="CameraHolder/Weapon Holder" unique_id=142705459 instance=ExtResource("2_cvnsp")]
-transform = Transform3D(0.38, 0, 0, 0, 0.38, 0, 0, 0, 0.38, 0, 0, 0)
-
-[node name="Camera3D" type="Camera3D" parent="CameraHolder" unique_id=2085396468]
-near = 0.459
 
 [node name="HealthBarViewport" type="SubViewport" parent="." unique_id=573421060]
 disable_3d = true

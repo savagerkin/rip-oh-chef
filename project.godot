@@ -26,7 +26,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gitot/plugin.cfg")
+enabled=PackedStringArray("res://addons/gitot/plugin.cfg", "res://addons/godotsteam/plugin.cfg")
 
 [input]
 

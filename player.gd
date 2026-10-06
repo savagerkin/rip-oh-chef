@@ -35,7 +35,9 @@ enum MovementState {
 @export var health_bar: ProgressBar
 @export var hud_health_bar: ProgressBar
 @export var username: Label
-
+@export var collison_shape: CollisionShape3D
+@export var crouching_height: float = 1.0
+@export var standing_height: float = 2.0
 
 var max_health: float = 100.0
 
@@ -169,24 +171,34 @@ func handle_movement_state(direction: Vector3) -> void:
 		MovementState.IDLE:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			self.scale = Vector3(1,1,1)
+			set_crouching(false)
 		MovementState.WALKING:
 			velocity.x = direction.x * SPEED
 			velocity.z = direction.z * SPEED
-			self.scale = Vector3(1,1,1)
+			set_crouching(false)
 
 		MovementState.RUNNING:
 			velocity.x = direction.x * RUN_SPEED
 			velocity.z = direction.z * RUN_SPEED
+			set_crouching(false)
 
 		MovementState.CROUCHING:
 			velocity.x = direction.x * CROUCH_SPEED
 			velocity.z = direction.z * CROUCH_SPEED
-			self.scale = Vector3(1,0.5,1)
+			set_crouching(true)
 		MovementState.SLIDING:
 			pass
 
+func set_crouching(crouching: bool) -> void:
+	var capsule := collison_shape.shape as CapsuleShape3D
 
+	if capsule == null:
+		return
+
+	if crouching:
+		capsule.height = crouching_height
+	else:
+		capsule.height = standing_height
 # Damage
 
 func take_damage(damage: float) -> void:
