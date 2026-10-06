@@ -1,32 +1,19 @@
 class_name Player
 extends CharacterBody3D
 
-const SPEED := 5.0
-const RUN_SPEED := 7.0
-const CROUCH_SPEED := 2.0
-const GRAVITY := 20.0
-const JUMP_VELOCITY := 7.0
 const MOUSE_SENSITIVITY := 0.002
 
+const Health = preload("uid://baj13oo0iqyx4")
+const Movement = preload("uid://bo6uwu6yar1tl")
 
-enum MovementState {
-	IDLE,
-	WALKING,
-	RUNNING,
-	CROUCHING,
-	SLIDING
-}
-
+var movement : PlayerMovement = Movement.new()
+var health_component : PlayerHealth = Health.new()
 
 @export var health: float = 100.0:
+	get:
+		return health_component.health
 	set(value):
-		health = value
-
-		if health_bar:
-			health_bar.value = health
-
-		if hud_health_bar and is_multiplayer_authority():
-			hud_health_bar.value = health
+		health_component.health = value
 
 
 @export var head: Node3D
@@ -36,12 +23,21 @@ enum MovementState {
 @export var hud_health_bar: ProgressBar
 @export var username: Label
 @export var collison_shape: CollisionShape3D
+@export var body_mesh: MeshInstance3D
 @export var crouching_height: float = 1.0
 @export var standing_height: float = 2.0
 
-var max_health: float = 100.0
+var max_health: float:
+	get:
+		return health_component.max_health
+	set(value):
+		health_component.max_health = value
 
-var movement_state: MovementState = MovementState.IDLE
+@export var movement_state: int:
+	get:
+		return movement.movement_state
+	set(value):
+		movement.movement_state = value
 
 var steam_id: int = 0
 var player_username: String = ""
@@ -52,6 +48,15 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	movement.player = self
+	movement.collision_shape = collison_shape
+	movement.body_mesh = body_mesh
+	movement.head = head
+	movement.crouching_height = crouching_height
+	movement.standing_height = standing_height
+	movement.initialize()
+	health_component.health_changed.connect(update_health_bars)
+
 	health_bar.max_value = max_health
 	health_bar.value = health
 
@@ -63,7 +68,7 @@ func _ready() -> void:
 		hud_health_bar.max_value = max_health
 		hud_health_bar.value = health
 
-	set_physics_process(is_owner)
+	set_physics_process(true)
 	set_process_input(is_owner)
 	set_process_unhandled_input(is_owner)
 
@@ -121,11 +126,14 @@ func _unhandled_input(event: InputEvent) -> void:
 # Movement
 
 func _physics_process(delta: float) -> void:
-	if not is_on_floor():
-		velocity.y -= GRAVITY * delta
+	movement.crouching_height = crouching_height
+	movement.standing_height = standing_height
 
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
+	if not is_multiplayer_authority():
+		movement.set_crouching(
+			movement_state == PlayerMovement.MovementState.CROUCHING
+		)
+		return
 
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -133,72 +141,17 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_pressed("shoot"):
 		weapon.fire()
 
-	var input := get_movement_input()
-
-	var direction := (
-		transform.basis * Vector3(input.x, 0, input.y)
-	).normalized()
-
-	update_movement_state(input)
-	handle_movement_state(direction)
-
-	move_and_slide()
+	movement.process_movement(delta)
 
 
-func get_movement_input() -> Vector2:
-	return Input.get_vector(
-		"move_left",
-		"move_right",
-		"move_forward",
-		"move_back"
-	)
+func update_health_bars(current_health: float) -> void:
+	if health_bar:
+		health_bar.value = current_health
+
+	if hud_health_bar and is_multiplayer_authority():
+		hud_health_bar.value = current_health
 
 
-func update_movement_state(input: Vector2) -> void:
-	if Input.is_action_pressed("crouch"):
-		movement_state = MovementState.CROUCHING
-	elif Input.is_action_pressed("sprint") and input.length() > 0:
-		movement_state = MovementState.RUNNING
-		
-	elif input.length() > 0:
-		movement_state = MovementState.WALKING
-	else:
-		movement_state = MovementState.IDLE
-
-
-func handle_movement_state(direction: Vector3) -> void:
-	match movement_state:
-		MovementState.IDLE:
-			velocity.x = 0.0
-			velocity.z = 0.0
-			set_crouching(false)
-		MovementState.WALKING:
-			velocity.x = direction.x * SPEED
-			velocity.z = direction.z * SPEED
-			set_crouching(false)
-
-		MovementState.RUNNING:
-			velocity.x = direction.x * RUN_SPEED
-			velocity.z = direction.z * RUN_SPEED
-			set_crouching(false)
-
-		MovementState.CROUCHING:
-			velocity.x = direction.x * CROUCH_SPEED
-			velocity.z = direction.z * CROUCH_SPEED
-			set_crouching(true)
-		MovementState.SLIDING:
-			pass
-
-func set_crouching(crouching: bool) -> void:
-	var capsule := collison_shape.shape as CapsuleShape3D
-
-	if capsule == null:
-		return
-
-	if crouching:
-		capsule.height = crouching_height
-	else:
-		capsule.height = standing_height
 # Damage
 
 func take_damage(damage: float) -> void:
@@ -221,8 +174,7 @@ func request_damage(damage: float) -> void:
 
 
 func apply_damage(damage: float) -> void:
-	health -= damage
-	health = clamp(health, 0.0, max_health)
+	health_component.apply_damage(damage)
 
 	print("Player ", name, " took ", damage," damage. Health: ", health)
 	if health <= 0.0:
@@ -231,6 +183,6 @@ func apply_damage(damage: float) -> void:
 
 func die() -> void:
 	if health <= 0:
-		health = max_health
+		health_component.reset()
 		self.global_position = Vector3(0, 10, 0)
 		print("Player ", name, " died")

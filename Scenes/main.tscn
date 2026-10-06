@@ -1,16 +1,16 @@
 [gd_scene format=4 uid="uid://ds8jscwhydigj"]
 
-[ext_resource type="Script" uid="uid://cjn7urpxartec" path="res://main.gd" id="1_jjgbg"]
-[ext_resource type="Texture2D" uid="uid://buq5g3fodx6ka" path="res://addons/AllSkyFree/Skyboxes/AllSkyFree_Sky_EpicGloriousPink_Equirect.png" id="2_6bp64"]
-[ext_resource type="Texture2D" uid="uid://b5x2kmv4so5c3" path="res://resources/textures/prototype_texture/grid_512x512/grid_black_512x512.png" id="3_8gbba"]
-[ext_resource type="Texture2D" uid="uid://5rp5mwqln1y" path="res://resources/textures/prototype_texture/grid_512x512/grid_blue_512x512.png" id="4_jjvhh"]
-[ext_resource type="Texture2D" uid="uid://bnkl4ak80ql03" path="res://resources/textures/prototype_texture/grid_512x512/grid_pink_512x512.png" id="5_kry3j"]
-[ext_resource type="Shader" uid="uid://ca22quxfgbneg" path="res://resources/water.gdshader" id="6_21xkr"]
-[ext_resource type="Texture2D" uid="uid://bc1m06ffp2r37" path="res://resources/textures/prototype_texture/grid_512x512/grid_cyan_512x512.png" id="7_6bp64"]
-[ext_resource type="Texture2D" uid="uid://bxq4lele4r4am" path="res://resources/textures/prototype_texture/grid_512x512/grid_yellow_512x512.png" id="8_344ge"]
+[ext_resource type="Script" uid="uid://cjn7urpxartec" path="res://scripts/main.gd" id="1_tipki"]
+[ext_resource type="Texture2D" uid="uid://buq5g3fodx6ka" path="res://addons/AllSkyFree/Skyboxes/AllSkyFree_Sky_EpicGloriousPink_Equirect.png" id="2_85g3d"]
+[ext_resource type="Texture2D" uid="uid://b5x2kmv4so5c3" path="res://resources/textures/prototype_texture/grid_512x512/grid_black_512x512.png" id="3_choun"]
+[ext_resource type="Texture2D" uid="uid://5rp5mwqln1y" path="res://resources/textures/prototype_texture/grid_512x512/grid_blue_512x512.png" id="4_ya4ey"]
+[ext_resource type="Texture2D" uid="uid://bnkl4ak80ql03" path="res://resources/textures/prototype_texture/grid_512x512/grid_pink_512x512.png" id="5_eb6dy"]
+[ext_resource type="Shader" uid="uid://ca22quxfgbneg" path="res://resources/water.gdshader" id="6_trceg"]
+[ext_resource type="Texture2D" uid="uid://bc1m06ffp2r37" path="res://resources/textures/prototype_texture/grid_512x512/grid_cyan_512x512.png" id="7_a8y0u"]
+[ext_resource type="Texture2D" uid="uid://bxq4lele4r4am" path="res://resources/textures/prototype_texture/grid_512x512/grid_yellow_512x512.png" id="8_jkv2x"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_auskg"]
-panorama = ExtResource("2_6bp64")
+panorama = ExtResource("2_85g3d")
 
 [sub_resource type="Sky" id="Sky_qbdty"]
 sky_material = SubResource("PanoramaSkyMaterial_auskg")
@@ -32,11 +32,11 @@ volumetric_fog_density = 0.0
 [sub_resource type="Compositor" id="Compositor_v5gy4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1vivr"]
-albedo_texture = ExtResource("3_8gbba")
+albedo_texture = ExtResource("3_choun")
 uv1_triplanar = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8vrlf"]
-albedo_texture = ExtResource("4_jjvhh")
+albedo_texture = ExtResource("4_ya4ey")
 uv1_triplanar = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_344ge"]
@@ -66,12 +66,12 @@ _surfaces = [{
 }]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v5gy4"]
-albedo_texture = ExtResource("5_kry3j")
+albedo_texture = ExtResource("5_eb6dy")
 uv1_triplanar = true
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_8vrlf"]
 render_priority = 0
-shader = ExtResource("6_21xkr")
+shader = ExtResource("6_trceg")
 shader_parameter/max_depth = 10.0
 shader_parameter/underwater_fog_color = Color(0, 0.05, 0.1, 1)
 shader_parameter/fade_start_depth = 0.5
@@ -91,7 +91,7 @@ shader_parameter/water_absorption = Color(0.3, 0.06, 0.02, 1)
 shader_parameter/roughness = 0.125
 shader_parameter/metallic = 0.0
 shader_parameter/specular = 0.5
-shader_parameter/caustics_texture = ExtResource("4_jjvhh")
+shader_parameter/caustics_texture = ExtResource("4_ya4ey")
 shader_parameter/caustics_scale = 2.0
 shader_parameter/caustics_speed = 0.1
 shader_parameter/caustics_intensity = 0.8
@@ -125,7 +125,7 @@ subdivide_width = 10
 subdivide_depth = 10
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qbdty"]
-albedo_texture = ExtResource("7_6bp64")
+albedo_texture = ExtResource("7_a8y0u")
 uv1_triplanar = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_6bp64"]
@@ -155,7 +155,7 @@ _surfaces = [{
 }]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_auskg"]
-albedo_texture = ExtResource("8_344ge")
+albedo_texture = ExtResource("8_jkv2x")
 uv1_triplanar = true
 
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_hptm8"]
@@ -222,7 +222,7 @@ _surfaces = [{
 data = PackedVector3Array(-0.5, -1.1719999, 4.3413, -0.5, -1.1719999, -4.3413, -0.5, 1.1719999, -4.3413, 0.5, -1.1719999, -4.3413, -0.5, -1.1719999, -4.3413, -0.5, -1.1719999, 4.3413, -0.5, 1.1719999, -4.3413, -0.5, -1.1719999, -4.3413, 0.5, -1.1719999, -4.3413, -0.5, 1.1719999, -4.3413, -0.5, 1.1719999, 4.3413, -0.5, -1.1719999, 4.3413, -0.5, -1.1719999, 4.3413, -0.5, 1.1719999, 4.3413, 0.5, 1.1719999, 4.3413, 0.5, 1.1719999, 4.3413, -0.5, 1.1719999, 4.3413, -0.5, 1.1719999, -4.3413, -0.5, -1.1719999, 4.3413, 0.5, -1.1719999, 4.3413, 0.5, -1.1719999, -4.3413, 0.5, 1.1719999, 4.3413, 0.5, -1.1719999, 4.3413, -0.5, -1.1719999, 4.3413, 0.5, -1.1719999, -4.3413, 0.5, -1.1719999, 4.3413, 0.5, 1.1719999, 4.3413, 0.5, -1.1719999, -4.3413, 0.5, 1.1719999, -4.3413, -0.5, 1.1719999, -4.3413, -0.5, 1.1719999, -4.3413, 0.5, 1.1719999, -4.3413, 0.5, 1.1719999, 4.3413, 0.5, 1.1719999, 4.3413, 0.5, 1.1719999, -4.3413, 0.5, -1.1719999, -4.3413)
 
 [node name="main" type="Node3D" unique_id=408063236 node_paths=PackedStringArray("spawner", "canvasLayer", "spawnPoint")]
-script = ExtResource("1_jjgbg")
+script = ExtResource("1_tipki")
 spawner = NodePath("MultiplayerSpawner")
 canvasLayer = NodePath("JoiningLayer")
 spawnPoint = NodePath("SpawnPoint")
