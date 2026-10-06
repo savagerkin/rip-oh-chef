@@ -59,34 +59,33 @@ jobs:
           cp -r "$TEMPLATE_DIR" ~/.local/share/godot/export_templates/
 
       - name: Build
+        shell: bash
         run: |
+          set -euo pipefail
+
           mkdir -v -p build/${{ matrix.platform }}
 
           EXPORT_DIR="$(readlink -f build)"
           OUTPUT="$EXPORT_DIR/${{ matrix.platform }}/${{ matrix.file }}"
 
-          echo "Building ${{ matrix.preset }}"
-          echo "Output: $OUTPUT"
+          godot --version
 
-          # Godot 4.7.2 can crash during shutdown in headless CI
-          # even after successfully creating the export.
           godot --headless --verbose \
+            --path "$PROJECT_PATH" \
+            --import
+
+          godot --headless --verbose \
+            --path "$PROJECT_PATH" \
             --export-release "${{ matrix.preset }}" \
-            "$OUTPUT" || true
+            "$OUTPUT"
 
-          echo ""
-          echo "Checking build output..."
+          test -s "$OUTPUT"
 
-          ls -lah "$EXPORT_DIR/${{ matrix.platform }}" || true
-
-          if [ ! -e "$OUTPUT" ]; then
-            echo "ERROR: Export was not created:"
-            echo "$OUTPUT"
-            exit 1
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            test -s "${OUTPUT%.exe}.pck"
           fi
 
-          echo "Build successfully created:"
-          echo "$OUTPUT"
+          ls -lah "$EXPORT_DIR/${{ matrix.platform }}"
 
       - name: Upload Build
         uses: actions/upload-artifact@v4
@@ -94,7 +93,6 @@ jobs:
           name: RipOhChef-${{ matrix.platform }}
           path: build/${{ matrix.platform }}
           if-no-files-found: error
-
 
   release:
     needs: build
@@ -135,7 +133,7 @@ jobs:
           if [ -n "$OLD_TAG" ]; then
             echo "Deleting oldest release: $OLD_TAG"
             gh release delete "$OLD_TAG" --yes
-          else
+          else:
             echo "No previous release found."
           fi
 
