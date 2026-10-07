@@ -24,6 +24,10 @@ Networking="*uid://c2ueunifcbnl3"
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[editor]
+
+export/convert_text_resources_to_binary=false
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gitot/plugin.cfg", "res://addons/godotsteam/plugin.cfg")
@@ -83,8 +87,8 @@ sprint={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
-textures/vram_compression/import_etc2_astc=true
 textures/vram_compression/import_s3tc_bptc=true
+textures/vram_compression/import_etc2_astc=true
 
 [steam]
 
