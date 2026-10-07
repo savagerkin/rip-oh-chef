@@ -8,6 +8,7 @@ extends Weapon
 func _ready() -> void:
 	super._ready()
 	bullets.top_level = true
+	bullets.global_transform = Transform3D.IDENTITY
 
 
 func fire() -> void:

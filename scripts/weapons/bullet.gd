@@ -18,6 +18,11 @@ func _enter_tree() -> void:
 	
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	print(
+		"Bullet spawned | Local peer: ", multiplayer.get_unique_id(),
+		" | Authority: ", get_multiplayer_authority(),
+		" | Path: ", get_path()
+	)
 	if not is_multiplayer_authority():
 		freeze = true
 		collision_layer = 0
