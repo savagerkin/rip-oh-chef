@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://ds8jscwhydigj"]
 
 [ext_resource type="Script" uid="uid://cjn7urpxartec" path="res://scripts/main.gd" id="1_tipki"]
-[ext_resource type="Texture2D" uid="uid://buq5g3fodx6ka" path="res://addons/AllSkyFree/Skyboxes/AllSkyFree_Sky_EpicGloriousPink_Equirect.png" id="2_85g3d"]
+[ext_resource type="Texture2D" uid="uid://buq5g3fodx6ka" path="res://addons/AllSkyFree/AllSkyFree_Sky_EpicGloriousPink_Equirect.png" id="2_85g3d"]
 [ext_resource type="Texture2D" uid="uid://b5x2kmv4so5c3" path="res://resources/textures/prototype_texture/grid_512x512/grid_black_512x512.png" id="3_choun"]
 [ext_resource type="Texture2D" uid="uid://5rp5mwqln1y" path="res://resources/textures/prototype_texture/grid_512x512/grid_blue_512x512.png" id="4_ya4ey"]
 [ext_resource type="Texture2D" uid="uid://bnkl4ak80ql03" path="res://resources/textures/prototype_texture/grid_512x512/grid_pink_512x512.png" id="5_eb6dy"]
