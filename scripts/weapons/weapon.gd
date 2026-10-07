@@ -9,7 +9,7 @@ extends Node3D
 @export var debug_tracer: MeshInstance3D
 @export_range(0.0, 15.0, 0.1) var spread_degrees: float = 0.0
 @export_range(0, 10, 1) var max_bounces: int = 0
-@export_range(0.0, 1.0, 0.05) var bounce_damage_multiplier: float = 0.75
+@export_range(0.0, 10.0, 0.05) var bounce_damage_mult: float = 0.75
 
 var shooter: Player
 
@@ -72,7 +72,10 @@ func fire() -> void:
 		remaining_range -= origin.distance_to(hit_position)
 
 		if target is Player:
-			target.take_damage(shot_damage)
+			target.take_damage(
+				shot_damage,
+				get_multiplayer_authority()
+			)
 			break
 
 		if not target is StaticBody3D:
@@ -90,7 +93,7 @@ func fire() -> void:
 			ray.remove_exception(shooter)
 			ray.exclude_parent = false
 
-		shot_damage *= bounce_damage_multiplier
+		shot_damage *= bounce_damage_mult
 		origin = hit_position + hit_normal * 0.01
 		remaining_range -= 0.01
 
@@ -102,7 +105,7 @@ func fire() -> void:
 		ray.add_exception(shooter)
 
 	draw_debug_path(points)
-
+	
 # Debug draw shoot line
 func draw_debug_path(points: PackedVector3Array) -> void:
 	if points.size() < 2:

@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://4gt5qooeqspv"]
+
+[ext_resource type="Script" uid="uid://dij220wup5nyb" path="res://scripts/weapons/sniper.gd" id="1_uyybc"]
+[ext_resource type="PackedScene" uid="uid://ch5akelypti5r" path="res://scenes/bullet.tscn" id="2_4cnfi"]
+[ext_resource type="Texture2D" uid="uid://b3h4d4f84vnov" path="res://resources/textures/prototype_texture/grid_1024x1024/grid_orange_1024x1024.png" id="2_wwo37"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1vivr"]
+albedo_texture = ExtResource("2_wwo37")
+uv1_triplanar = true
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4cnfi"]
+material = SubResource("StandardMaterial3D_1vivr")
+
+[sub_resource type="PlaceholderMesh" id="PlaceholderMesh_hjovk"]
+
+[node name="Sniper" type="Node3D" unique_id=1188623 node_paths=PackedStringArray("bullets", "timer", "ray", "debug_tracer")]
+script = ExtResource("1_uyybc")
+bullet_scene = ExtResource("2_4cnfi")
+bullet_speed = 70.0
+bullets = NodePath("BulletSpawner")
+timer = NodePath("FireTimer")
+ray = NodePath("RayCast3D")
+debug_tracer = NodePath("DebugMesh")
+spread_degrees = 1.0
+max_bounces = 10
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=573857023]
+transform = Transform3D(-2.0981467e-08, -1, 0, 0.48000002, -4.371139e-08, 0, 0, 0, 0.6031144, 0, 0, 0)
+mesh = SubResource("CylinderMesh_4cnfi")
+
+[node name="Marker3D" type="Marker3D" parent="." unique_id=20125706]
+gizmo_extents = 2.62
+
+[node name="RayCast3D" type="RayCast3D" parent="." unique_id=894879177]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0269411, 0, 0)
+target_position = Vector3(100, 0, 0)
+
+[node name="FireTimer" type="Timer" parent="." unique_id=599667468]
+wait_time = 0.2
+one_shot = true
+
+[node name="DebugMesh" type="MeshInstance3D" parent="." unique_id=1137128423]
+mesh = SubResource("PlaceholderMesh_hjovk")
+
+[node name="BulletSpawner" type="Node3D" parent="." unique_id=889337934]
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="." unique_id=686885435]
+_spawnable_scenes = PackedStringArray("uid://ch5akelypti5r")
+spawn_path = NodePath("../BulletSpawner")

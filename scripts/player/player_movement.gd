@@ -60,7 +60,7 @@ func initialize() -> void:
 func process_movement(delta: float) -> void:
 	if not player.is_on_floor():
 		player.velocity.y -= GRAVITY * delta
-
+		
 	if Input.is_action_just_pressed("jump") and player.is_on_floor():
 		player.velocity.y = JUMP_VELOCITY
 

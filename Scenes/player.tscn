@@ -5,6 +5,8 @@
 [ext_resource type="Script" uid="uid://cu8nyj3k4s0cx" path="res://scripts/weapons/head_hitbox.gd" id="3_dqkch"]
 [ext_resource type="PackedScene" uid="uid://qu2yl5mtlfk0" path="res://scenes/health_bar.tscn" id="3_qlg0r"]
 [ext_resource type="Script" uid="uid://yrlu1xr000dd" path="res://scripts/weapons/pistol.gd" id="3_tuyoq"]
+[ext_resource type="PackedScene" uid="uid://4gt5qooeqspv" path="res://scenes/sniper.tscn" id="4_tuyoq"]
+[ext_resource type="Shader" uid="uid://cq6h25cdlfuk" path="res://resources/speedlines.gdshader" id="7_fjrip"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6t5aa"]
 
@@ -46,18 +48,38 @@ properties/3/replication_mode = 2
 [sub_resource type="ViewportTexture" id="ViewportTexture_a08nb"]
 viewport_path = NodePath("HealthBarViewport")
 
-[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "eyes_mesh", "camera", "weapon", "health_bar", "hud_health_bar", "username", "collison_shape", "body_mesh", "head_hitbox")]
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_ur7pv"]
+noise_type = 0
+frequency = 0.1535
+fractal_type = 0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_smehm"]
+noise = SubResource("FastNoiseLite_ur7pv")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1vivr"]
+shader = ExtResource("7_fjrip")
+shader_parameter/noise = SubResource("NoiseTexture2D_smehm")
+shader_parameter/line_color = Color(0.68307734, 0.6830774, 0.68307734, 1)
+shader_parameter/line_count = 0.65000000968578
+shader_parameter/line_density = 0.39200001862
+shader_parameter/line_faloff = 0.5510000261725
+shader_parameter/mask_size = 0.0050000002375
+shader_parameter/mask_edge = 0.7470000354825
+shader_parameter/animation_speed = 20.0
+
+[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "eyes_mesh", "camera", "weapon", "health_bar", "hud_health_bar", "username", "collison_shape", "body_mesh", "head_hitbox", "sprint_lines")]
 script = ExtResource("1_qhqgy")
 head = NodePath("CollisionShape3D/CameraHolder")
 eyes_mesh = NodePath("CollisionShape3D/BodyMesh/Eyes")
 camera = NodePath("CollisionShape3D/CameraHolder/Camera3D")
-weapon = NodePath("CollisionShape3D/CameraHolder/Weapon Holder/Weapon")
+weapon = NodePath("CollisionShape3D/CameraHolder/Weapon Holder/Sniper")
 health_bar = NodePath("HealthBarViewport/HealthBar")
 hud_health_bar = NodePath("HUD/HealthBar")
 username = NodePath("HealthBarViewport/Label")
 collison_shape = NodePath("CollisionShape3D")
 body_mesh = NodePath("CollisionShape3D/BodyMesh")
 head_hitbox = NodePath("CollisionShape3D/HeadShotHtibox")
+sprint_lines = NodePath("HUD/SpeedLine")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1729655473]
 shape = SubResource("CapsuleShape3D_6t5aa")
@@ -78,10 +100,19 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.55
 
 [node name="Weapon" parent="CollisionShape3D/CameraHolder/Weapon Holder" unique_id=142705459 instance=ExtResource("2_dqkch")]
 transform = Transform3D(0.38, 0, 0, 0, 0.38, 0, 0, 0, 0.38, 0, 0, 0)
+visible = false
 script = ExtResource("3_tuyoq")
 spread_degrees = 1.0
 max_bounces = 2
-bounce_damage_multiplier = 1.0
+
+[node name="Sniper" parent="CollisionShape3D/CameraHolder/Weapon Holder" unique_id=1188623 node_paths=PackedStringArray("timer", "ray", "debug_tracer") instance=ExtResource("4_tuyoq")]
+bullet_speed = 25.0
+damage = 5.0
+fire_rate = 0.8
+timer = NodePath("../Weapon/FireTimer")
+ray = NodePath("../Weapon/RayCast3D")
+debug_tracer = NodePath("../Weapon/DebugMesh")
+bounce_damage_mult = 3.0
 
 [node name="Camera3D" type="Camera3D" parent="CollisionShape3D/CameraHolder" unique_id=2085396468]
 near = 0.232
@@ -138,3 +169,21 @@ offset_bottom = 0.0
 grow_horizontal = 1
 grow_vertical = 0
 value = 90.0
+
+[node name="Label" type="Label" parent="HUD" unique_id=1392033064]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -147.0
+offset_bottom = 187.0
+grow_horizontal = 0
+size_flags_horizontal = 8
+
+[node name="SpeedLine" type="ColorRect" parent="HUD" unique_id=1340974781]
+process_mode = 4
+material = SubResource("ShaderMaterial_1vivr")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

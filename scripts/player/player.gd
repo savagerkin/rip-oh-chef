@@ -30,6 +30,14 @@ var health_component : PlayerHealth = Health.new()
 @export var crouching_height: float = 1.0
 @export var standing_height: float = 2.0
 @export var head_hitbox: Area3D
+@export var normal_fov: float = 75.0
+@export var sprint_fov: float = 90.0
+@export var fov_speed: float = 8.0
+@export var sprint_lines: ColorRect
+
+var last_attacker_id: int = 0
+var died_to_death_plane: bool = false
+
 
 var max_health: float:
 	get:
@@ -60,7 +68,8 @@ func _ready() -> void:
 	movement.standing_height = standing_height
 	movement.initialize()
 	health_component.health_changed.connect(update_health_bars)
-
+	if sprint_lines:
+		sprint_lines.hide()
 	health_bar.max_value = max_health
 	health_bar.value = health
 
@@ -153,6 +162,23 @@ func _physics_process(delta: float) -> void:
 		weapon.fire()
 
 	movement.process_movement(delta)
+	var sprinting := (
+		Input.is_action_pressed("sprint")
+		and Input.get_vector(
+			"move_left", "move_right",
+			"move_forward", "move_back"
+		).length_squared() > 0.0
+		and movement_state != PlayerMovement.MovementState.CROUCHING
+	)
+	if sprint_lines:
+		sprint_lines.visible = sprinting
+	var target_fov := sprint_fov if sprinting else normal_fov
+
+	camera.fov = lerpf(
+		camera.fov,
+		target_fov,
+		1.0 - exp(-fov_speed * delta)
+	)
 
 
 func update_health_bars(current_health: float) -> void:
@@ -165,36 +191,52 @@ func update_health_bars(current_health: float) -> void:
 
 # Damage
 
-func take_damage(damage: float) -> void:
+func take_damage(
+	damage: float,
+	attacker_id: int = 0,
+	from_death_plane: bool = false
+) -> void:
 	if is_multiplayer_authority():
-		apply_damage(damage)
+		apply_damage(damage, attacker_id, from_death_plane)
 		return
 
 	request_damage.rpc_id(
 		get_multiplayer_authority(),
-		damage
+		damage,
+		attacker_id,
+		from_death_plane
 	)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func request_damage(damage: float) -> void:
+func request_damage(
+	damage: float,
+	attacker_id: int = 0,
+	from_death_plane: bool = false
+) -> void:
 	if not is_multiplayer_authority():
 		return
 
-	apply_damage(damage)
+	apply_damage(damage, attacker_id, from_death_plane)
 
 
-func apply_damage(damage: float) -> void:
+func apply_damage(
+	damage: float,
+	attacker_id: int = 0,
+	from_death_plane: bool = false
+) -> void:
 	if health <= 0.0:
 		return
 
+	last_attacker_id = attacker_id
+	died_to_death_plane = from_death_plane
+
 	health_component.apply_damage(damage)
 
-	print("Player ", name, " took ", damage," damage. Health: ", health)
+	print("Player ", name, " took ", damage, " damage. Health: ", health)
+
 	if health <= 0.0:
 		die()
-
-
 func die() -> void:
 	if health <= 0 and is_multiplayer_authority():
 		print("Player ", name, " died")
@@ -213,3 +255,6 @@ func respawn_at(spawn_position: Vector3) -> void:
 	health_component.reset()
 	velocity = Vector3.ZERO
 	global_position = spawn_position
+	
+	last_attacker_id = 0
+	died_to_death_plane = false
