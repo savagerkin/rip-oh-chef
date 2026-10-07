@@ -73,6 +73,8 @@ func _ready() -> void:
 	if is_owner:
 		hud_health_bar.max_value = max_health
 		hud_health_bar.value = health
+		# Assignming my shooter in wepaon, and stopping myself form shooting myself ;)
+		weapon.shooter = self
 		weapon.ray.add_exception(self)
 		if head_hitbox:
 			weapon.ray.add_exception(head_hitbox)

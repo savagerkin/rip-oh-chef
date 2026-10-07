@@ -1,9 +1,10 @@
 [gd_scene format=4 uid="uid://b5dxiciiiyot3"]
 
 [ext_resource type="Script" uid="uid://du6tdy7622q7m" path="res://scripts/player/player.gd" id="1_qhqgy"]
-[ext_resource type="PackedScene" uid="uid://bem6v0fjickci" path="res://Scenes/weapon.tscn" id="2_dqkch"]
-[ext_resource type="Script" uid="uid://cu8nyj3k4s0cx" path="res://scenes/head_hitbox.gd" id="3_dqkch"]
-[ext_resource type="PackedScene" uid="uid://qu2yl5mtlfk0" path="res://Scenes/health_bar.tscn" id="3_qlg0r"]
+[ext_resource type="PackedScene" uid="uid://bem6v0fjickci" path="res://scenes/weapon.tscn" id="2_dqkch"]
+[ext_resource type="Script" uid="uid://cu8nyj3k4s0cx" path="res://scripts/weapons/head_hitbox.gd" id="3_dqkch"]
+[ext_resource type="PackedScene" uid="uid://qu2yl5mtlfk0" path="res://scenes/health_bar.tscn" id="3_qlg0r"]
+[ext_resource type="Script" uid="uid://yrlu1xr000dd" path="res://scripts/weapons/pistol.gd" id="3_tuyoq"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6t5aa"]
 
@@ -77,6 +78,10 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.55
 
 [node name="Weapon" parent="CollisionShape3D/CameraHolder/Weapon Holder" unique_id=142705459 instance=ExtResource("2_dqkch")]
 transform = Transform3D(0.38, 0, 0, 0, 0.38, 0, 0, 0, 0.38, 0, 0, 0)
+script = ExtResource("3_tuyoq")
+spread_degrees = 1.0
+max_bounces = 2
+bounce_damage_multiplier = 1.0
 
 [node name="Camera3D" type="Camera3D" parent="CollisionShape3D/CameraHolder" unique_id=2085396468]
 near = 0.232
