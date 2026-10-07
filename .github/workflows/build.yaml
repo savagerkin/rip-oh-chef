@@ -5,7 +5,6 @@ on:
     branches:
       - main
 
-  # Keeps the button in GitHub so you can still run it manually.
   workflow_dispatch:
 
 permissions:
@@ -34,6 +33,10 @@ jobs:
           - platform: mac
             preset: "macOS"
             file: "RipOhChef.zip"
+
+          - platform: linux
+            preset: "Linux"
+            file: "RipOhChef.x86_64"
 
     steps:
       - name: Checkout
@@ -81,8 +84,8 @@ jobs:
 
           test -s "$OUTPUT"
 
-          if [ "${{ matrix.platform }}" = "windows" ]; then
-            test -s "${OUTPUT%.exe}.pck"
+          if [ "${{ matrix.platform }}" = "windows" ] || [ "${{ matrix.platform }}" = "linux" ]; then
+            test -s "${OUTPUT%.*}.pck"
           fi
 
           ls -lah "$EXPORT_DIR/${{ matrix.platform }}"
@@ -120,7 +123,12 @@ jobs:
         run: |
           cp builds/RipOhChef-mac/RipOhChef.zip RipOhChef-macOS.zip
 
-      # Delete the oldest GitHub release, if one exists.
+      - name: Package Linux Build
+        run: |
+          chmod +x builds/RipOhChef-linux/RipOhChef.x86_64
+          tar -czf RipOhChef-Linux.tar.gz \
+            -C builds/RipOhChef-linux .
+
       - name: Delete Oldest Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -137,8 +145,6 @@ jobs:
             echo "No previous release found."
           fi
 
-      # Every Actions run gets a unique number.
-      # Example: build-12, build-13, build-14...
       - name: Create Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -150,6 +156,7 @@ jobs:
           gh release create "$TAG" \
             RipOhChef-Windows.zip \
             RipOhChef-macOS.zip \
+            RipOhChef-Linux.tar.gz \
             --target "${GITHUB_SHA}" \
             --title "Rip Oh Chef $TAG" \
             --generate-notes \
