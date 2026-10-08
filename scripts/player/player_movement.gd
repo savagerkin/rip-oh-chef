@@ -1,11 +1,16 @@
 class_name PlayerMovement
 extends RefCounted
 
-const SPEED := 5.0
-const RUN_SPEED := 7.0
-const CROUCH_SPEED := 2.0
-const GRAVITY := 20.0
-const JUMP_VELOCITY := 7.0
+const SPEED: float = 5.0
+const RUN_SPEED: float = 7.0
+const CROUCH_SPEED: float = 2.0
+
+const GRAVITY: float = 20.0
+const JUMP_VELOCITY: float = 7.0
+
+const SLIDE_SPEED: float = 10.0
+const SLIDE_FRICTION: float = 6.0
+const FLOOR_SNAP_LENGTH: float = 0.3
 
 
 enum MovementState {
@@ -18,126 +23,167 @@ enum MovementState {
 
 
 var player: CharacterBody3D
-var collision_shape: CollisionShape3D
-var body_mesh: MeshInstance3D
-var head: Node3D
-var crouching_height: float = 1.0
-var standing_height: float = 2.0
+var stance: PlayerStance
 var movement_state: MovementState = MovementState.IDLE
 
-
-var capsule: CapsuleShape3D
-var bottom_y: float
-var original_height: float
-var original_mesh_transform: Transform3D
-var mesh_bottom: Vector3
-var original_head_position: Vector3
+var original_floor_stop_on_slope: bool = true
 
 
-func initialize() -> void:
-	if collision_shape.shape is not CapsuleShape3D:
-		return
+func initialize(body: CharacterBody3D, player_stance: PlayerStance) -> void:
+	player = body
+	stance = player_stance
 
-	collision_shape.shape = collision_shape.shape.duplicate()
-	capsule = collision_shape.shape as CapsuleShape3D
-	original_height = capsule.height
-	bottom_y = collision_shape.position.y - original_height * 0.5
-
-	if body_mesh and body_mesh.mesh:
-		original_mesh_transform = (
-			player.global_transform.affine_inverse() * body_mesh.global_transform
-		)
-		var bounds := body_mesh.mesh.get_aabb()
-		mesh_bottom = bounds.get_center()
-		mesh_bottom.y = bounds.position.y
-
-	if head:
-		original_head_position = player.to_local(head.global_position)
-
-	set_crouching(movement_state == MovementState.CROUCHING)
+	original_floor_stop_on_slope = player.floor_stop_on_slope
+	player.floor_snap_length = maxf(player.floor_snap_length, FLOOR_SNAP_LENGTH)
+	update_crouching_pose()
 
 
 func process_movement(delta: float) -> void:
-	if not player.is_on_floor():
-		player.velocity.y -= GRAVITY * delta
-		
-	if Input.is_action_just_pressed("jump") and player.is_on_floor():
+	var grounded: bool = player.is_on_floor()
+	var wants_to_jump: bool = Input.is_action_just_pressed("jump")
+	var jumping: bool = grounded and wants_to_jump
+
+	var input: Vector2 = get_movement_input()
+	var direction: Vector3 = get_movement_direction(input)
+
+	update_movement_state(input, grounded, jumping)
+
+	player.floor_stop_on_slope = original_floor_stop_on_slope
+
+	if movement_state == MovementState.SLIDING:
+		player.floor_stop_on_slope = false
+
+	if jumping:
+		# Change vertical speed only.
+		# Keep the horizontal momentum from the previous frame.
 		player.velocity.y = JUMP_VELOCITY
 
-	var input := get_movement_input()
+	elif grounded:
+		if movement_state == MovementState.SLIDING:
+			process_ground_slide(delta)
+		else:
+			process_ground_movement(direction)
 
-	var direction := (
-		player.transform.basis * Vector3(input.x, 0, input.y)
-	).normalized()
+	else:
+		# No ground friction or movement-speed replacement in the air.
+		player.velocity.y -= GRAVITY * delta
 
-	update_movement_state(input)
-	handle_movement_state(direction)
+	update_crouching_pose()
 
 	player.move_and_slide()
 
+	# Follow nearby slopes, but never snap during a jump.
+	if grounded and not jumping:
+		player.apply_floor_snap()
+
+	finish_slide_if_slow()
+
+
+func finish_slide_if_slow() -> void:
+	# Check collision-adjusted velocity, including after landing.
+	if movement_state == MovementState.SLIDING and player.is_on_floor():
+		var floor_normal: Vector3 = player.get_floor_normal()
+		var ground_velocity: Vector3 = player.velocity.slide(floor_normal)
+
+		if ground_velocity.length() <= CROUCH_SPEED:
+			movement_state = MovementState.CROUCHING
+			player.floor_stop_on_slope = original_floor_stop_on_slope
+
 
 func get_movement_input() -> Vector2:
-	return Input.get_vector(
-		"move_left",
-		"move_right",
-		"move_forward",
-		"move_back"
-	)
+	return Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 
 
-func update_movement_state(input: Vector2) -> void:
+func get_movement_direction(input: Vector2) -> Vector3:
+	var direction: Vector3 = player.transform.basis * Vector3(input.x, 0.0, input.y)
+	direction.y = 0.0
+
+	return direction.normalized()
+
+
+func update_movement_state(input: Vector2, grounded: bool, jumping: bool) -> void:
+	# Sliding stays active through jumps and falls.
+	# The speed check after movement decides when it ends.
+	if movement_state == MovementState.SLIDING:
+		return
+
+	# Keep the current state while airborne.
+	if not grounded or jumping:
+		return
+
+	if movement_state == MovementState.RUNNING:
+		if Input.is_action_just_pressed("crouch"):
+			var horizontal_velocity: Vector3 = player.velocity
+			horizontal_velocity.y = 0.0
+
+			if horizontal_velocity.length() > CROUCH_SPEED:
+				start_slide()
+				return
+
 	if Input.is_action_pressed("crouch"):
 		movement_state = MovementState.CROUCHING
-	elif Input.is_action_pressed("sprint") and input.length() > 0:
+	elif Input.is_action_pressed("sprint") and input.length_squared() > 0.0:
 		movement_state = MovementState.RUNNING
-	elif input.length() > 0:
+	elif input.length_squared() > 0.0:
 		movement_state = MovementState.WALKING
 	else:
 		movement_state = MovementState.IDLE
 
 
-func handle_movement_state(direction: Vector3) -> void:
-	match movement_state:
-		MovementState.IDLE:
-			player.velocity.x = 0.0
-			player.velocity.z = 0.0
-			set_crouching(false)
-		MovementState.WALKING:
-			player.velocity.x = direction.x * SPEED
-			player.velocity.z = direction.z * SPEED
-			set_crouching(false)
-		MovementState.RUNNING:
-			player.velocity.x = direction.x * RUN_SPEED
-			player.velocity.z = direction.z * RUN_SPEED
-			set_crouching(false)
-		MovementState.CROUCHING:
-			player.velocity.x = direction.x * CROUCH_SPEED
-			player.velocity.z = direction.z * CROUCH_SPEED
-			set_crouching(true)
-		MovementState.SLIDING:
-			pass
+func start_slide() -> void:
+	var floor_normal: Vector3 = player.get_floor_normal()
+	var ground_velocity: Vector3 = player.velocity.slide(floor_normal)
 
-
-func set_crouching(crouching: bool) -> void:
-	if capsule == null:
+	if ground_velocity.length_squared() < 0.01:
 		return
 
-	var target_height := crouching_height if crouching else standing_height
-	capsule.height = maxf(target_height, capsule.radius * 2.0)
-	collision_shape.position.y = bottom_y + capsule.height * 0.5
+	# Give the slide an initial boost without reducing existing speed.
+	var starting_speed: float = maxf(ground_velocity.length(), SLIDE_SPEED)
 
-	if body_mesh and body_mesh.mesh:
-		var mesh_transform := original_mesh_transform
-		mesh_transform.basis.y = (
-			original_mesh_transform.basis.y * capsule.height / original_height
-		)
-		mesh_transform.origin += (
-			original_mesh_transform.basis * mesh_bottom
-			- mesh_transform.basis * mesh_bottom
-		)
-		body_mesh.global_transform = player.global_transform * mesh_transform
+	player.velocity = ground_velocity.normalized() * starting_speed
+	movement_state = MovementState.SLIDING
 
-	if head:
-		head.global_position = player.to_global(
-			original_head_position + Vector3(0.0, capsule.height - original_height, 0.0)
-		)
+
+func process_ground_slide(delta: float) -> void:
+	var floor_normal: Vector3 = player.get_floor_normal()
+
+	# Keep movement parallel to the surface.
+	var ground_velocity: Vector3 = player.velocity.slide(floor_normal)
+
+	# Only the part of gravity along the slope affects slide speed.
+	var gravity: Vector3 = Vector3.DOWN * GRAVITY
+	var slope_gravity: Vector3 = gravity.slide(floor_normal)
+
+	ground_velocity += slope_gravity * delta
+
+	# Ground friction gradually removes momentum.
+	ground_velocity = ground_velocity.move_toward(Vector3.ZERO, SLIDE_FRICTION * delta)
+
+	player.velocity = ground_velocity
+
+
+func process_ground_movement(direction: Vector3) -> void:
+	var movement_speed: float = 0.0
+
+	match movement_state:
+		MovementState.WALKING:
+			movement_speed = SPEED
+
+		MovementState.RUNNING:
+			movement_speed = RUN_SPEED
+
+		MovementState.CROUCHING:
+			movement_speed = CROUCH_SPEED
+
+	# Align normal movement with the floor too.
+	var floor_normal: Vector3 = player.get_floor_normal()
+	var ground_direction: Vector3 = direction.slide(floor_normal).normalized()
+
+	player.velocity = ground_direction * movement_speed
+
+
+func update_crouching_pose() -> void:
+	var is_crouching: bool = movement_state == MovementState.CROUCHING
+	var is_sliding: bool = movement_state == MovementState.SLIDING
+
+	stance.set_crouching(is_crouching or is_sliding)

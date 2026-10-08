@@ -67,18 +67,18 @@ shader_parameter/mask_size = 0.0050000002375
 shader_parameter/mask_edge = 0.7470000354825
 shader_parameter/animation_speed = 20.0
 
-[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "eyes_mesh", "camera", "weapon", "health_bar", "hud_health_bar", "username", "collison_shape", "body_mesh", "head_hitbox", "sprint_lines")]
+[node name="Player" type="CharacterBody3D" unique_id=1186766046 node_paths=PackedStringArray("head", "eyes_mesh", "collison_shape", "body_mesh", "head_hitbox", "camera", "weapon", "health_bar", "hud_health_bar", "username", "sprint_lines")]
 script = ExtResource("1_qhqgy")
 head = NodePath("CollisionShape3D/CameraHolder")
 eyes_mesh = NodePath("CollisionShape3D/BodyMesh/Eyes")
-camera = NodePath("CollisionShape3D/CameraHolder/Camera3D")
-weapon = NodePath("CollisionShape3D/CameraHolder/Weapon Holder/Sniper")
-health_bar = NodePath("HealthBarViewport/HealthBar")
-hud_health_bar = NodePath("HUD/HealthBar")
-username = NodePath("HealthBarViewport/Label")
 collison_shape = NodePath("CollisionShape3D")
 body_mesh = NodePath("CollisionShape3D/BodyMesh")
 head_hitbox = NodePath("CollisionShape3D/HeadShotHtibox")
+camera = NodePath("CollisionShape3D/CameraHolder/Camera3D")
+weapon = NodePath("CollisionShape3D/CameraHolder/Weapon Holder/Sniper")
+health_bar = NodePath("HealthBarViewport/HealthBar")
+hud_health_bar = NodePath("HUD/HUDHealthBar")
+username = NodePath("HealthBarViewport/Username")
 sprint_lines = NodePath("HUD/SpeedLine")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1729655473]
@@ -135,7 +135,7 @@ transparent_bg = true
 [node name="HealthBar" parent="HealthBarViewport" unique_id=1168862445 instance=ExtResource("3_qlg0r")]
 value = 90.0
 
-[node name="Label" type="Label" parent="HealthBarViewport" unique_id=640054999]
+[node name="Username" type="Label" parent="HealthBarViewport" unique_id=640054999]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -156,7 +156,7 @@ texture = SubResource("ViewportTexture_a08nb")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=707143996]
 
-[node name="HealthBar" parent="HUD" unique_id=1749792676 instance=ExtResource("3_qlg0r")]
+[node name="HUDHealthBar" parent="HUD" unique_id=1749792676 instance=ExtResource("3_qlg0r")]
 anchors_preset = 2
 anchor_left = 0.0
 anchor_top = 1.0

@@ -6,9 +6,9 @@ signal joined_game()
 signal steam_identity_received(peer_id: int, steam_id: int)
 
 const LOBBY_TYPE := Steam.LobbyType.LOBBY_TYPE_FRIENDS_ONLY
-const MAX_MEMBERS := 4
+const MAX_MEMBERS: int = 4
 
-const LOCAL_PORT := 7777
+const LOCAL_PORT: int = 7777
 
 var peer: MultiplayerPeer
 
@@ -27,34 +27,37 @@ func _process(_delta: float) -> void:
 
 
 # STEAM
-
 func host_lobby() -> void:
 	Steam.createLobby(LOBBY_TYPE, MAX_MEMBERS)
 
 
 func on_lobby_created(result: int, _lobby_id: int) -> void:
-	if result == Steam.RESULT_OK:
-		var steam_peer := SteamMultiplayerPeer.new()
-		steam_peer.server_relay = true
-		steam_peer.create_host()
+	if result != Steam.RESULT_OK:
+		return
 
-		peer = steam_peer
-		multiplayer.multiplayer_peer = peer
+	var steam_peer: SteamMultiplayerPeer = SteamMultiplayerPeer.new()
+	steam_peer.server_relay = true
+	steam_peer.create_host()
 
-		host_created.emit()
+	set_peer(steam_peer)
+
+	host_created.emit()
 
 
 func on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
-	if response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS:
-		if Steam.getLobbyOwner(lobby_id) == Steam.getSteamID():
-			return
-		var steam_peer := SteamMultiplayerPeer.new()
-		steam_peer.server_relay = true
-		steam_peer.create_client(Steam.getLobbyOwner(lobby_id))
+	if response != Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS:
+		return
 
-		peer = steam_peer
-		multiplayer.multiplayer_peer = peer
-		joined_game.emit()
+	if Steam.getLobbyOwner(lobby_id) == Steam.getSteamID():
+		return
+
+	var steam_peer: SteamMultiplayerPeer = SteamMultiplayerPeer.new()
+	steam_peer.server_relay = true
+	steam_peer.create_client(Steam.getLobbyOwner(lobby_id))
+
+	set_peer(steam_peer)
+	joined_game.emit()
+
 
 func on_join_requested(lobby_id: int, _steam_id: int) -> void:
 	Steam.joinLobby(lobby_id)
@@ -65,10 +68,7 @@ func on_connected_to_server() -> void:
 	if multiplayer.multiplayer_peer is not SteamMultiplayerPeer:
 		return
 
-	send_steam_identity.rpc_id(
-		1,
-		Steam.getSteamID()
-	)
+	send_steam_identity.rpc_id(1, Steam.getSteamID())
 
 
 # Sends this client's Steam ID to the server.
@@ -77,12 +77,9 @@ func send_steam_identity(steam_id: int) -> void:
 	if not multiplayer.is_server():
 		return
 
-	var peer_id := multiplayer.get_remote_sender_id()
+	var peer_id: int = multiplayer.get_remote_sender_id()
 
-	steam_identity_received.emit(
-		peer_id,
-		steam_id
-	)
+	steam_identity_received.emit(peer_id, steam_id)
 
 
 # Gets a Steam username from a Steam ID.
@@ -95,16 +92,11 @@ func get_username_from_steam_id(steam_id: int) -> String:
 		return Steam.getPersonaName()
 
 	# Other Steam player.
-	var steam_username: String = Steam.getFriendPersonaName(
-		steam_id
-	)
+	var steam_username: String = Steam.getFriendPersonaName(steam_id)
 
 	if steam_username.is_empty():
 		# Ask Steam to cache their persona information.
-		Steam.requestUserInformation(
-			steam_id,
-			false
-		)
+		Steam.requestUserInformation(steam_id, false)
 
 		return "Unknown"
 
@@ -112,33 +104,35 @@ func get_username_from_steam_id(steam_id: int) -> String:
 
 
 # LOCAL TESTING
-
 func host_local() -> void:
-	var local_peer := ENetMultiplayerPeer.new()
+	var local_peer: ENetMultiplayerPeer = ENetMultiplayerPeer.new()
 
-	var error := local_peer.create_server(LOCAL_PORT, MAX_MEMBERS)
+	var error: Error = local_peer.create_server(LOCAL_PORT, MAX_MEMBERS)
 
 	if error != OK:
 		print("Failed to create local server: ", error)
 		return
 
-	peer = local_peer
-	multiplayer.multiplayer_peer = peer
+	set_peer(local_peer)
 
 	print("Local server started")
 	host_created.emit()
 
 
 func join_local() -> void:
-	var local_peer := ENetMultiplayerPeer.new()
+	var local_peer: ENetMultiplayerPeer = ENetMultiplayerPeer.new()
 
-	var error := local_peer.create_client("127.0.0.1", LOCAL_PORT)
+	var error: Error = local_peer.create_client("127.0.0.1", LOCAL_PORT)
 
 	if error != OK:
 		print("Failed to join local server: ", error)
 		return
 
-	peer = local_peer
-	multiplayer.multiplayer_peer = peer
+	set_peer(local_peer)
 
 	print("Joining local server...")
+
+
+func set_peer(new_peer: MultiplayerPeer) -> void:
+	peer = new_peer
+	multiplayer.multiplayer_peer = peer

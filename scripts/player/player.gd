@@ -3,13 +3,18 @@ extends CharacterBody3D
 
 signal died(player: Player)
 
-const MOUSE_SENSITIVITY := 0.002
+const MOUSE_SENSITIVITY: float = 0.002
 
 const Health = preload("uid://baj13oo0iqyx4")
 const Movement = preload("uid://bo6uwu6yar1tl")
+const Stance = preload("res://scripts/player/player_stance.gd")
+const Presentation = preload("res://scripts/player/player_presentation.gd")
 
-var movement : PlayerMovement = Movement.new()
-var health_component : PlayerHealth = Health.new()
+# Components
+var movement: PlayerMovement = Movement.new()
+var health_component: PlayerHealth = Health.new()
+var stance: PlayerStance = Stance.new()
+var presentation: PlayerPresentation = Presentation.new()
 
 @export var health: float = 100.0:
 	get:
@@ -18,23 +23,40 @@ var health_component : PlayerHealth = Health.new()
 		health_component.health = value
 
 
+@export_group("Scene References")
+
+@export_subgroup("Body")
 @export var head: Node3D
 @export var eyes_mesh: MeshInstance3D
+@export var collison_shape: CollisionShape3D
+@export var body_mesh: MeshInstance3D
+@export var head_hitbox: Area3D
+
+@export_subgroup("Camera and Weapon")
 @export var camera: Camera3D
 @export var weapon: Weapon
+
+@export_subgroup("UI")
 @export var health_bar: ProgressBar
 @export var hud_health_bar: ProgressBar
 @export var username: Label
-@export var collison_shape: CollisionShape3D
-@export var body_mesh: MeshInstance3D
+@export var sprint_lines: ColorRect
+
+
+@export_group("Movement")
 @export var crouching_height: float = 1.0
 @export var standing_height: float = 2.0
-@export var head_hitbox: Area3D
+
+
+@export_group("Camera Settings")
 @export var normal_fov: float = 75.0
 @export var sprint_fov: float = 90.0
 @export var fov_speed: float = 8.0
-@export var sprint_lines: ColorRect
 
+
+@export_group("")
+
+# Player state
 var last_attacker_id: int = 0
 var died_to_death_plane: bool = false
 
@@ -60,52 +82,35 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	movement.player = self
-	movement.collision_shape = collison_shape
-	movement.body_mesh = body_mesh
-	movement.head = head
-	movement.crouching_height = crouching_height
-	movement.standing_height = standing_height
-	movement.initialize()
-	health_component.health_changed.connect(update_health_bars)
-	if sprint_lines:
-		sprint_lines.hide()
-	health_bar.max_value = max_health
-	health_bar.value = health
+	initialize_components()
 
-	var is_owner := is_multiplayer_authority()
-
-	hud_health_bar.visible = is_owner
-	if eyes_mesh:
-		eyes_mesh.visible = not is_owner
+	var is_owner: bool = is_multiplayer_authority()
+	presentation.configure_owner(is_owner, max_health, health)
 
 	if is_owner:
-		hud_health_bar.max_value = max_health
-		hud_health_bar.value = health
-		# Assignming my shooter in wepaon, and stopping myself form shooting myself ;)
-		weapon.shooter = self
-		weapon.ray.add_exception(self)
-		if head_hitbox:
-			weapon.ray.add_exception(head_hitbox)
+		weapon.initialize_shooter(self, head_hitbox)
 
 	set_physics_process(true)
 	set_process_input(is_owner)
 	set_process_unhandled_input(is_owner)
 
-	if is_owner:
-		camera.current = true
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
 	load_username()
 
 
-# Username
+func initialize_components() -> void:
+	stance.crouching_height = crouching_height
+	stance.standing_height = standing_height
+	stance.initialize(self, collison_shape, body_mesh, head)
+	movement.initialize(self, stance)
 
+	presentation.initialize(camera, health_bar, hud_health_bar, eyes_mesh, sprint_lines)
+	health_component.health_changed.connect(update_health_bars)
+
+
+# Username
 func load_username() -> void:
 	if multiplayer.multiplayer_peer is not SteamMultiplayerPeer:
-		player_username = "Player " + str(
-			get_multiplayer_authority()
-		)
+		player_username = "Player " + str(get_multiplayer_authority())
 
 		username.text = player_username
 		return
@@ -114,9 +119,7 @@ func load_username() -> void:
 		username.text = "Unknown"
 		return
 
-	player_username = Networking.get_username_from_steam_id(
-		steam_id
-	)
+	player_username = Networking.get_username_from_steam_id(steam_id)
 
 	if player_username == "Unknown":
 		await get_tree().create_timer(0.5).timeout
@@ -130,29 +133,21 @@ func load_username() -> void:
 
 
 # Input
-
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		rotate_y(-event.relative.x * MOUSE_SENSITIVITY)
 		head.rotate_x(-event.relative.y * MOUSE_SENSITIVITY)
 
-		head.rotation.x = clamp(
-			head.rotation.x,
-			deg_to_rad(-90),
-			deg_to_rad(90)
-		)
+		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-90), deg_to_rad(90))
 
 
 # Movement
-
 func _physics_process(delta: float) -> void:
-	movement.crouching_height = crouching_height
-	movement.standing_height = standing_height
+	stance.crouching_height = crouching_height
+	stance.standing_height = standing_height
 
 	if not is_multiplayer_authority():
-		movement.set_crouching(
-			movement_state == PlayerMovement.MovementState.CROUCHING
-		)
+		movement.update_crouching_pose()
 		return
 
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
@@ -162,69 +157,42 @@ func _physics_process(delta: float) -> void:
 		weapon.fire()
 
 	movement.process_movement(delta)
-	var sprinting := (
-		Input.is_action_pressed("sprint")
-		and Input.get_vector(
-			"move_left", "move_right",
-			"move_forward", "move_back"
-		).length_squared() > 0.0
-		and movement_state != PlayerMovement.MovementState.CROUCHING
-	)
-	if sprint_lines:
-		sprint_lines.visible = sprinting
-	var target_fov := sprint_fov if sprinting else normal_fov
 
-	camera.fov = lerpf(
-		camera.fov,
-		target_fov,
-		1.0 - exp(-fov_speed * delta)
-	)
+	update_camera_effects(delta)
+
+
+func update_camera_effects(delta: float) -> void:
+	var movement_input: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var sprint_pressed: bool = Input.is_action_pressed("sprint")
+	var is_moving: bool = movement_input.length_squared() > 0.0
+	var is_crouching: bool = movement_state == PlayerMovement.MovementState.CROUCHING
+	var sprinting: bool = sprint_pressed and is_moving and not is_crouching
+
+	presentation.update_camera(delta, sprinting, normal_fov, sprint_fov, fov_speed)
 
 
 func update_health_bars(current_health: float) -> void:
-	if health_bar:
-		health_bar.value = current_health
-
-	if hud_health_bar and is_multiplayer_authority():
-		hud_health_bar.value = current_health
+	presentation.update_health(current_health, is_multiplayer_authority())
 
 
 # Damage
-
-func take_damage(
-	damage: float,
-	attacker_id: int = 0,
-	from_death_plane: bool = false
-) -> void:
+func take_damage(damage: float, attacker_id: int = 0, from_death_plane: bool = false) -> void:
 	if is_multiplayer_authority():
 		apply_damage(damage, attacker_id, from_death_plane)
 		return
 
-	request_damage.rpc_id(
-		get_multiplayer_authority(),
-		damage,
-		attacker_id,
-		from_death_plane
-	)
+	request_damage.rpc_id(get_multiplayer_authority(), damage, attacker_id, from_death_plane)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func request_damage(
-	damage: float,
-	attacker_id: int = 0,
-	from_death_plane: bool = false
-) -> void:
+func request_damage(damage: float, attacker_id: int = 0, from_death_plane: bool = false) -> void:
 	if not is_multiplayer_authority():
 		return
 
 	apply_damage(damage, attacker_id, from_death_plane)
 
 
-func apply_damage(
-	damage: float,
-	attacker_id: int = 0,
-	from_death_plane: bool = false
-) -> void:
+func apply_damage(damage: float, attacker_id: int = 0, from_death_plane: bool = false) -> void:
 	if health <= 0.0:
 		return
 
@@ -237,6 +205,8 @@ func apply_damage(
 
 	if health <= 0.0:
 		die()
+
+
 func die() -> void:
 	if health <= 0 and is_multiplayer_authority():
 		print("Player ", name, " died")
@@ -248,13 +218,13 @@ func respawn_at(spawn_position: Vector3) -> void:
 	if not is_multiplayer_authority():
 		return
 
-	var sender_id := multiplayer.get_remote_sender_id()
+	var sender_id: int = multiplayer.get_remote_sender_id()
 	if sender_id != 0 and sender_id != 1:
 		return
 
 	health_component.reset()
 	velocity = Vector3.ZERO
 	global_position = spawn_position
-	
+
 	last_attacker_id = 0
 	died_to_death_plane = false

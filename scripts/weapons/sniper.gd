@@ -1,9 +1,10 @@
 class_name Sniper
 extends Weapon
 
-@export var bullet_scene : PackedScene
+@export var bullet_scene: PackedScene
 @export var bullet_speed: float = 60.0
 @export var bullets: Node3D
+
 
 func _ready() -> void:
 	super._ready()
@@ -12,31 +13,13 @@ func _ready() -> void:
 
 
 func fire() -> void:
-	if not timer.is_stopped():
+	if not begin_shot():
 		return
 
-	timer.start()
-	
-	#Give it spread
-	var spread := deg_to_rad(spread_degrees)
-	var direction := Vector3.RIGHT
+	var direction: Vector3 = get_shot_direction()
+	var bullet: Bullet = bullet_scene.instantiate() as Bullet
 
-	direction = direction.rotated(
-		Vector3.UP,
-		randf_range(-spread, spread)
-	)
-	direction = direction.rotated(
-		Vector3.FORWARD,
-		randf_range(-spread, spread)
-	)
-		
-	direction = (ray.global_basis * direction).normalized()
-	var bullet := bullet_scene.instantiate() as Bullet
-	
-	bullet.damage = damage
-	bullet.shooter = shooter
-	bullet.max_bounces = max_bounces
-	bullet.bounce_damage_mult = bounce_damage_mult
+	bullet.initialize(damage, shooter, max_bounces, bounce_damage_mult)
 
 	bullet.position = bullets.to_local(ray.global_position)
 	bullet.linear_velocity = direction * bullet_speed

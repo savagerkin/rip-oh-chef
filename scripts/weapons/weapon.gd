@@ -13,6 +13,7 @@ extends Node3D
 
 var shooter: Player
 
+
 func _ready() -> void:
 	ray.collide_with_areas = true
 	timer.one_shot = true
@@ -22,63 +23,47 @@ func _ready() -> void:
 
 	debug_tracer.mesh = ImmediateMesh.new()
 
+
 func fire() -> void:
-	if not timer.is_stopped():
+	if not begin_shot():
 		return
 
-	timer.start()
-	var original_position := ray.global_position
-	var original_local_position := ray.position
-	var original_target := ray.target_position
+	var original_position: Vector3 = ray.global_position
+	var original_local_position: Vector3 = ray.position
+	var original_target: Vector3 = ray.target_position
 
-	var spread := deg_to_rad(spread_degrees)
-	var direction := Vector3.RIGHT
+	var direction: Vector3 = get_shot_direction()
 
-	direction = direction.rotated(
-		Vector3.UP,
-		randf_range(-spread, spread)
-	)
-	direction = direction.rotated(
-		Vector3.FORWARD,
-		randf_range(-spread, spread)
-	)
-	direction = (ray.global_basis * direction).normalized()
-
-	var origin := original_position
-	var remaining_range := ray_range
-	var shot_damage := damage
-	var points := PackedVector3Array([origin])
-	var original_exclude_parent := ray.exclude_parent
+	var origin: Vector3 = original_position
+	var remaining_range: float = ray_range
+	var shot_damage: float = damage
+	var points: PackedVector3Array = PackedVector3Array([origin])
+	var original_exclude_parent: bool = ray.exclude_parent
 
 	for bounce_index in range(max_bounces + 1):
 		if remaining_range <= 0.0:
 			break
 
 		ray.global_position = origin
-		ray.target_position = ray.to_local(
-			origin + direction * remaining_range
-		)
+		ray.target_position = ray.to_local(origin + direction * remaining_range)
 		ray.force_raycast_update()
 
 		if not ray.is_colliding():
 			points.append(origin + direction * remaining_range)
 			break
 
-		var hit_position := ray.get_collision_point()
-		var hit_normal := ray.get_collision_normal()
-		var target := ray.get_collider()
+		var hit_position: Vector3 = ray.get_collision_point()
+		var hit_normal: Vector3 = ray.get_collision_normal()
+		var target: Object = ray.get_collider()
 
 		points.append(hit_position)
 		remaining_range -= origin.distance_to(hit_position)
 
 		if target is Player:
-			target.take_damage(
-				shot_damage,
-				get_multiplayer_authority()
-			)
+			target.take_damage(shot_damage, get_multiplayer_authority())
 			break
 
-		if not target is StaticBody3D:
+		if target is not StaticBody3D:
 			break
 
 		if bounce_index == max_bounces:
@@ -97,7 +82,7 @@ func fire() -> void:
 		origin = hit_position + hit_normal * 0.01
 		remaining_range -= 0.01
 
-	ray.position = original_local_position	
+	ray.position = original_local_position
 	ray.target_position = original_target
 	ray.exclude_parent = original_exclude_parent
 
@@ -105,27 +90,49 @@ func fire() -> void:
 		ray.add_exception(shooter)
 
 	draw_debug_path(points)
-	
-# Debug draw shoot line
+
+
+# Draw the shot path briefly.
 func draw_debug_path(points: PackedVector3Array) -> void:
 	if points.size() < 2:
 		return
 
-	var debug_mesh := ImmediateMesh.new()
+	var debug_mesh: ImmediateMesh = ImmediateMesh.new()
 	debug_tracer.mesh = debug_mesh
 
 	debug_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 
 	for index in range(points.size() - 1):
-		debug_mesh.surface_add_vertex(
-			debug_tracer.to_local(points[index])
-		)
-		debug_mesh.surface_add_vertex(
-			debug_tracer.to_local(points[index + 1])
-		)
+		debug_mesh.surface_add_vertex(debug_tracer.to_local(points[index]))
+		debug_mesh.surface_add_vertex(debug_tracer.to_local(points[index + 1]))
 
 	debug_mesh.surface_end()
 
 	await get_tree().create_timer(0.1).timeout
 
 	debug_mesh.clear_surfaces()
+
+
+func initialize_shooter(player: Player, head_hitbox: Area3D) -> void:
+	shooter = player
+	ray.add_exception(shooter)
+
+	if head_hitbox:
+		ray.add_exception(head_hitbox)
+
+
+func begin_shot() -> bool:
+	if not timer.is_stopped():
+		return false
+
+	timer.start()
+	return true
+
+
+func get_shot_direction() -> Vector3:
+	var spread: float = deg_to_rad(spread_degrees)
+	var direction: Vector3 = Vector3.RIGHT
+
+	direction = direction.rotated(Vector3.UP, randf_range(-spread, spread))
+	direction = direction.rotated(Vector3.FORWARD, randf_range(-spread, spread))
+	return (ray.global_basis * direction).normalized()
