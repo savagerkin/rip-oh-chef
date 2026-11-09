@@ -1,11 +1,11 @@
 [gd_scene format=4 uid="uid://b5dxiciiiyot3"]
 
 [ext_resource type="Script" uid="uid://du6tdy7622q7m" path="res://scripts/player/player.gd" id="1_qhqgy"]
-[ext_resource type="PackedScene" uid="uid://bem6v0fjickci" path="res://scenes/weapon.tscn" id="2_dqkch"]
+[ext_resource type="PackedScene" uid="uid://bem6v0fjickci" path="res://Scenes/weapon.tscn" id="2_dqkch"]
 [ext_resource type="Script" uid="uid://cu8nyj3k4s0cx" path="res://scripts/weapons/head_hitbox.gd" id="3_dqkch"]
-[ext_resource type="PackedScene" uid="uid://qu2yl5mtlfk0" path="res://scenes/health_bar.tscn" id="3_qlg0r"]
+[ext_resource type="PackedScene" uid="uid://qu2yl5mtlfk0" path="res://Scenes/health_bar.tscn" id="3_qlg0r"]
 [ext_resource type="Script" uid="uid://yrlu1xr000dd" path="res://scripts/weapons/pistol.gd" id="3_tuyoq"]
-[ext_resource type="PackedScene" uid="uid://4gt5qooeqspv" path="res://scenes/sniper.tscn" id="4_tuyoq"]
+[ext_resource type="PackedScene" uid="uid://4gt5qooeqspv" path="res://Scenes/sniper.tscn" id="4_tuyoq"]
 [ext_resource type="Shader" uid="uid://cq6h25cdlfuk" path="res://resources/speedlines.gdshader" id="7_fjrip"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6t5aa"]
